@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>廣播測試 · MGP 2026</title>
+	<style>
+		*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+			background: #0c0a09;
+			color: #e7e5e4;
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 2rem 1rem;
+		}
+
+		h1 {
+			font-size: 1.5rem;
+			font-weight: 700;
+			letter-spacing: 0.05em;
+			color: #fbbf24;
+			margin-bottom: 0.25rem;
+		}
+
+		.subtitle {
+			font-size: 0.85rem;
+			color: #78716c;
+			margin-bottom: 2rem;
+		}
+
+		.card {
+			background: #1c1917;
+			border: 1px solid #292524;
+			border-radius: 1rem;
+			padding: 1.5rem;
+			width: 100%;
+			max-width: 480px;
+			margin-bottom: 1.5rem;
+		}
+
+		.card h2 {
+			font-size: 0.85rem;
+			font-weight: 600;
+			color: #a8a29e;
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+			margin-bottom: 1rem;
+		}
+
+		/* 連線狀態 */
+		.status-row {
+			display: flex;
+			align-items: center;
+			gap: 0.6rem;
+			font-size: 0.9rem;
+		}
+
+		.dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: #44403c;
+			flex-shrink: 0;
+			transition: background 0.3s;
+		}
+		.dot.connected { background: #22c55e; animation: pulse 2s infinite; }
+		.dot.error     { background: #ef4444; }
+
+		@keyframes pulse {
+			0%, 100% { opacity: 1; }
+			50%       { opacity: 0.4; }
+		}
+
+		/* 表單 */
+		.form-row {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+			margin-bottom: 1rem;
+		}
+
+		label {
+			font-size: 0.78rem;
+			font-weight: 500;
+			color: #a8a29e;
+			display: block;
+			margin-bottom: 0.3rem;
+		}
+
+		select, input[type="text"] {
+			width: 100%;
+			background: #292524;
+			border: 1px solid #44403c;
+			border-radius: 0.5rem;
+			color: #e7e5e4;
+			font-size: 0.95rem;
+			padding: 0.55rem 0.75rem;
+			outline: none;
+			transition: border-color 0.2s;
+		}
+
+		select:focus, input[type="text"]:focus {
+			border-color: #fbbf24;
+		}
+
+		/* 快速發送按鈕 */
+		.btn-row {
+			display: flex;
+			gap: 0.6rem;
+		}
+
+		button {
+			flex: 1;
+			padding: 0.65rem 1rem;
+			border: none;
+			border-radius: 0.6rem;
+			font-size: 0.9rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: opacity 0.15s, transform 0.1s;
+		}
+
+		button:active { transform: scale(0.97); }
+		button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+		.btn-pgm {
+			background: #ef4444;
+			color: #fff;
+		}
+
+		.btn-pvw {
+			background: #22c55e;
+			color: #fff;
+		}
+
+		.btn-clear {
+			background: #44403c;
+			color: #e7e5e4;
+			flex: 0 0 auto;
+			padding: 0.65rem 0.8rem;
+		}
+
+		/* 隱藏/顯示區塊 */
+		.optional-field { display: none; }
+		.optional-field.visible { display: block; }
+
+		/* List 模式切換 */
+		.toggle-row {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.55rem 0.75rem;
+			background: #292524;
+			border: 1px solid #44403c;
+			border-radius: 0.5rem;
+			cursor: pointer;
+			user-select: none;
+			transition: border-color 0.2s;
+		}
+		.toggle-row:hover { border-color: #78716c; }
+		.toggle-row input[type="checkbox"] {
+			width: auto;
+			accent-color: #fbbf24;
+			cursor: pointer;
+		}
+		.toggle-row span { font-size: 0.9rem; color: #d6d3d1; }
+		.toggle-row .badge {
+			margin-left: auto;
+			font-size: 0.72rem;
+			background: #fbbf24;
+			color: #0c0a09;
+			border-radius: 0.25rem;
+			padding: 0.1rem 0.45rem;
+			font-weight: 700;
+			letter-spacing: 0.04em;
+		}
+
+		input[type="number"] {
+			width: 100%;
+			background: #292524;
+			border: 1px solid #44403c;
+			border-radius: 0.5rem;
+			color: #e7e5e4;
+			font-size: 0.95rem;
+			padding: 0.55rem 0.75rem;
+			outline: none;
+			transition: border-color 0.2s;
+		}
+		input[type="number"]:focus { border-color: #fbbf24; }
+
+		.started-presets {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.35rem;
+			margin-top: 0.4rem;
+		}
+		.started-preset-btn {
+			flex: 0 0 auto;
+			padding: 0.2rem 0.55rem;
+			background: #1c1917;
+			border: 1px solid #44403c;
+			border-radius: 0.35rem;
+			color: #a8a29e;
+			font-size: 0.78rem;
+			font-family: 'SF Mono', 'Fira Code', monospace;
+			cursor: pointer;
+		}
+		.started-preset-btn:hover { background: #292524; border-color: #fbbf24; color: #fde68a; }
+
+		/* 快速預設按鈕群 */
+		.preset-label {
+			font-size: 0.75rem;
+			color: #78716c;
+			margin-bottom: 0.5rem;
+			margin-top: 0.25rem;
+		}
+
+		.preset-grid {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.4rem;
+		}
+
+		.preset-btn {
+			flex: 0 0 auto;
+			padding: 0.3rem 0.75rem;
+			background: #292524;
+			border: 1px solid #44403c;
+			border-radius: 0.4rem;
+			color: #d6d3d1;
+			font-size: 0.82rem;
+			font-weight: 500;
+			cursor: pointer;
+		}
+
+		.preset-btn:hover { background: #3c3735; border-color: #78716c; }
+
+		/* 訊息記錄 */
+		#log {
+			list-style: none;
+			max-height: 260px;
+			overflow-y: auto;
+			display: flex;
+			flex-direction: column;
+			gap: 0.4rem;
+		}
+
+		#log li {
+			font-size: 0.82rem;
+			font-family: 'SF Mono', 'Fira Code', monospace;
+			padding: 0.4rem 0.6rem;
+			border-radius: 0.4rem;
+			border-left: 3px solid #44403c;
+			background: #0c0a09;
+			color: #a8a29e;
+			word-break: break-all;
+		}
+
+		#log li.sent   { border-left-color: #fbbf24; color: #fde68a; }
+		#log li.pgm    { border-left-color: #ef4444; color: #fca5a5; }
+		#log li.pvw    { border-left-color: #22c55e; color: #86efac; }
+		#log li.system { border-left-color: #6366f1; color: #a5b4fc; font-style: italic; }
+		#log li.error  { border-left-color: #f97316; color: #fdba74; }
+
+		.log-empty {
+			font-size: 0.82rem;
+			color: #57534e;
+			font-style: italic;
+			text-align: center;
+			padding: 1rem 0;
+		}
+
+		.log-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 0.75rem;
+		}
+
+		.btn-clear-log {
+			flex: 0 0 auto;
+			padding: 0.2rem 0.6rem;
+			background: transparent;
+			border: 1px solid #44403c;
+			border-radius: 0.35rem;
+			color: #78716c;
+			font-size: 0.75rem;
+			font-weight: 400;
+		}
+	</style>
+</head>
+<body>
+	<h1>📡 廣播測試</h1>
+	<p class="subtitle">MGP 2026 · 同步伺服器</p>
+
+	<!-- 連線狀態 -->
+	<div class="card">
+		<h2>連線狀態</h2>
+		<div class="status-row">
+			<div class="dot" id="dot"></div>
+			<span id="statusText">連線中…</span>
+			<span style="margin-left:auto;font-size:0.8rem;color:#57534e;" id="clientCount"></span>
+		</div>
+	</div>
+
+	<!-- 發送 -->
+	<div class="card">
+		<h2>發送訊息</h2>
+		<div class="form-row">
+			<div>
+				<label>類型 (type)</label>
+				<select id="typeSelect" onchange="onTypeChange()">
+					<option value="pgm">pgm — 切換 PGM</option>
+					<option value="pvw">pvw — 切換 PVW</option>
+					<option value="clear">clear — 清除</option>
+				</select>
+			</div>
+			<div id="nameRow">
+				<label>備註名稱 (name) — 對應前端「備註」欄位</label>
+				<input type="text" id="nameInput" placeholder="輸入備註名稱，如：主持人開場" />
+			</div>
+
+			<!-- scene_type：僅 pgm 時顯示 -->
+			<div id="sceneTypeRow" class="optional-field">
+				<label style="margin-bottom:0.4rem;">scene_type（場景類型）</label>
+				<label class="toggle-row" for="listModeCheckbox">
+					<input type="checkbox" id="listModeCheckbox" onchange="onListModeChange()" />
+					<span>List 模式（場景為播放清單）</span>
+					<span class="badge">LIST</span>
+				</label>
+			</div>
+
+			<!-- started：僅 pgm + list 時顯示 -->
+			<div id="startedRow" class="optional-field">
+				<label>started（已播秒數）</label>
+				<input type="number" id="startedInput" value="0" min="0" step="1" placeholder="0" />
+				<div class="started-presets">
+					<button class="started-preset-btn" onclick="setStarted(0)">0s（從頭）</button>
+					<button class="started-preset-btn" onclick="setStarted(60)">60s</button>
+					<button class="started-preset-btn" onclick="setStarted(183)">183s</button>
+					<button class="started-preset-btn" onclick="setStarted(300)">300s（5 分）</button>
+					<button class="started-preset-btn" onclick="setStarted(600)">600s（10 分）</button>
+					<button class="started-preset-btn" onclick="setStarted(nowSec())">⏱ 現在</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="btn-row">
+			<button class="btn-pgm" id="btnPgm" disabled onclick="sendMsg('pgm')">🔴 PGM</button>
+			<button class="btn-pvw" id="btnPvw" disabled onclick="sendMsg('pvw')">🟢 PVW</button>
+			<button class="btn-clear" id="btnClear" disabled onclick="sendMsg('clear')" title="清除">✕</button>
+		</div>
+
+		<p class="preset-label">快速填入名稱：</p>
+		<div class="preset-grid" id="presetGrid">
+			<button class="preset-btn" onclick="setName(this.textContent)">測試</button>
+			<button class="preset-btn" onclick="setName(this.textContent)">開場</button>
+			<button class="preset-btn" onclick="setName(this.textContent)">中場</button>
+			<button class="preset-btn" onclick="setName(this.textContent)">閉幕</button>
+			<button class="preset-btn" onclick="setNameList('2_1', 0)">2_1 List▶0s</button>
+			<button class="preset-btn" onclick="setNameList('2_1', 183)">2_1 List▶183s</button>
+			<button class="preset-btn" onclick="setNameList('2_1', 600)">2_1 List▶10m</button>
+		</div>
+	</div>
+
+	<!-- 訊息記錄 -->
+	<div class="card">
+		<div class="log-header">
+			<h2 style="margin:0">訊息記錄</h2>
+			<button class="btn-clear-log" onclick="clearLog()">清除</button>
+		</div>
+		<ul id="log"><li class="log-empty" id="logEmpty">尚無訊息</li></ul>
+	</div>
+
+	<script>
+		const WS_URL = `ws://${location.host}/ws`
+		let ws = null
+
+		const dot        = document.getElementById('dot')
+		const statusText = document.getElementById('statusText')
+		const clientCount = document.getElementById('clientCount')
+		const nameInput  = document.getElementById('nameInput')
+		const typeSelect = document.getElementById('typeSelect')
+		const logEl      = document.getElementById('log')
+		const logEmpty   = document.getElementById('logEmpty')
+		const btns       = [
+			document.getElementById('btnPgm'),
+			document.getElementById('btnPvw'),
+			document.getElementById('btnClear'),
+		]
+
+		function setConnected(ok) {
+			dot.className = 'dot ' + (ok ? 'connected' : 'error')
+			statusText.textContent = ok ? '已連線' : '連線失敗，嘗試重連…'
+			btns.forEach(b => b.disabled = !ok)
+		}
+
+		function addLog(text, cls = '') {
+			if (logEmpty) logEmpty.remove()
+			const li = document.createElement('li')
+			li.className = cls
+			const ts = new Date().toLocaleTimeString('zh-TW', { hour12: false })
+			li.textContent = `[${ts}] ${text}`
+			logEl.prepend(li)
+			if (logEl.children.length > 100) logEl.lastElementChild.remove()
+		}
+
+		function clearLog() {
+			logEl.innerHTML = '<li class="log-empty" id="logEmpty">尚無訊息</li>'
+		}
+
+		const sceneTypeRow   = document.getElementById('sceneTypeRow')
+		const startedRow     = document.getElementById('startedRow')
+		const listModeCheck  = document.getElementById('listModeCheckbox')
+		const startedInput   = document.getElementById('startedInput')
+		const nameRow        = document.getElementById('nameRow')
+
+		function onTypeChange() {
+			const t = typeSelect.value
+			sceneTypeRow.classList.toggle('visible', t === 'pgm')
+			nameRow.style.display = t === 'clear' ? 'none' : ''
+			if (t !== 'pgm') {
+				listModeCheck.checked = false
+				startedRow.classList.remove('visible')
+			}
+		}
+
+		function onListModeChange() {
+			startedRow.classList.toggle('visible', listModeCheck.checked)
+		}
+
+		function setName(name) {
+			nameInput.value = name
+			typeSelect.value = 'pgm'
+			onTypeChange()
+			nameInput.focus()
+		}
+
+		function setStarted(sec) {
+			startedInput.value = sec
+		}
+
+		function nowSec() {
+			const d = new Date()
+			return d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds()
+		}
+
+		/** 快速設定為 pgm + list + 指定 name 與 started */
+		function setNameList(name, started) {
+			typeSelect.value = 'pgm'
+			onTypeChange()
+			nameInput.value = name
+			listModeCheck.checked = true
+			onListModeChange()
+			startedInput.value = started
+		}
+
+		function sendMsg(overrideType) {
+			if (!ws || ws.readyState !== WebSocket.OPEN) return
+			const type = overrideType || typeSelect.value
+			const name = nameInput.value.trim()
+
+			const payload = { type }
+			if (type !== 'clear') payload.name = name
+			if (type === 'pgm' && listModeCheck.checked) {
+				payload.scene_type = 'list'
+				payload.started = Number(startedInput.value) || 0
+			}
+
+			const raw = JSON.stringify(payload)
+			ws.send(raw)
+
+			const cls = type === 'pgm' ? 'pgm sent' : type === 'pvw' ? 'pvw sent' : 'sent'
+			addLog(`→ 傳送 ${raw}`, cls)
+		}
+
+		function connect() {
+			statusText.textContent = '連線中…'
+			dot.className = 'dot'
+			btns.forEach(b => b.disabled = true)
+
+			ws = new WebSocket(WS_URL)
+
+			ws.addEventListener('open', () => {
+				setConnected(true)
+				addLog('WebSocket 已連線', 'system')
+				fetchStatus()
+			})
+
+			ws.addEventListener('message', (e) => {
+				let parsed
+				try { parsed = JSON.parse(e.data) } catch { return }
+				const cls = parsed.type === 'pgm' ? 'pgm' : parsed.type === 'pvw' ? 'pvw' : ''
+				addLog(`← 收到 ${e.data}`, cls)
+			})
+
+			ws.addEventListener('close', () => {
+				setConnected(false)
+				addLog('連線已斷開', 'error')
+				clientCount.textContent = ''
+				setTimeout(connect, 3000)
+			})
+
+			ws.addEventListener('error', () => {
+				addLog('連線錯誤', 'error')
+			})
+		}
+
+		async function fetchStatus() {
+			try {
+				const r = await fetch('/status')
+				const d = await r.json()
+				clientCount.textContent = `${d.clients} 個客戶端`
+			} catch {}
+		}
+
+		setInterval(fetchStatus, 5000)
+
+		// 按 Enter 快速發送（依目前 select 類型）
+		nameInput.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') sendMsg(typeSelect.value)
+		})
+
+		connect()
+	</script>
+</body>
+</html>
