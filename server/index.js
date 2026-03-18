@@ -68,7 +68,7 @@ app.get('/{*path}', (req, res) => {
 })
 
 const server = createServer(app)
-const wss = new WebSocketServer({ server, path: '/ws' })
+const wss = new WebSocketServer({ server, path: '/ws/' })
 
 wss.on('connection', (ws, req) => {
 	const ip = req.socket.remoteAddress

@@ -6,7 +6,7 @@ export default defineConfig({
 	server: {
 		proxy: {
 			// 開發時將 /ws WebSocket 請求轉發到 Express server
-			'/ws': {
+			'/ws/': {
 				target:          'ws://localhost:3333',
 				ws:              true,
 				rewriteWsOrigin: true,
