@@ -11,7 +11,8 @@
 		"server": "node server/index.js",
 		"server:test": "TEST_MODE=1 node server/index.js",
 		"build:serve": "vite build && node server/index.js",
-		"build:test": "vite build && TEST_MODE=1 node server/index.js"
+		"build:test": "vite build && TEST_MODE=1 node server/index.js",
+		"ml": "node server/ml.js"
 	},
 	"dependencies": {
 		"cors": "^2.8.6",
