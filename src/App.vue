@@ -808,15 +808,17 @@ const currentRowIndex = computed(() => {
 							<option v-for="d in dateOptions" :key="d" :value="d">{{ d }}</option>
 						</select>
 					</div>
-					<label class="block text-xs font-medium mb-1"
-						:class="isDark ? 'text-stone-500' : 'text-stone-600'">主題</label>
-					<button type="button"
-						class="w-full rounded-lg px-3 py-2 border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 flex items-center justify-center gap-2"
-						:class="isDark ? 'bg-stone-700 border-stone-600 text-stone-100 hover:bg-stone-600' : 'bg-stone-100 border-stone-400 text-stone-900 hover:bg-stone-200'"
-						@click="toggleTheme" :aria-label="isDark ? '切換為淺色' : '切換為深色'">
-						<span v-if="isDark">☀️ 淺色</span>
-						<span v-else>🌙 深色</span>
-					</button>
+					<div>
+						<label class="block text-xs font-medium mb-1"
+							:class="isDark ? 'text-stone-500' : 'text-stone-600'">主題</label>
+						<button type="button"
+							class="w-full rounded-lg px-3 py-2 border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 flex items-center justify-center gap-2"
+							:class="isDark ? 'bg-stone-700 border-stone-600 text-stone-100 hover:bg-stone-600' : 'bg-stone-100 border-stone-400 text-stone-900 hover:bg-stone-200'"
+							@click="toggleTheme" :aria-label="isDark ? '切換為淺色' : '切換為深色'">
+							<span v-if="isDark">☀️ 淺色</span>
+							<span v-else>🌙 深色</span>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -932,7 +934,7 @@ const currentRowIndex = computed(() => {
 										<div class="flex items-center justify-between font-mono font-medium"
 											:class="isDark ? 'text-stone-200' : 'text-stone-500'">
 											<span v-if="getTimeElapsedSinceStart(row)">{{ getTimeElapsedSinceStart(row)
-												}}</span>
+											}}</span>
 											<span v-else></span>
 											<span>-{{ getTimeLeftUntilEnd(row) }}</span>
 										</div>
@@ -956,6 +958,12 @@ const currentRowIndex = computed(() => {
 									</template>
 									<template v-else>
 										<template v-if="vmixSceneMap[getRowKey(row)]">
+											<!-- vMix 來源編號 -->
+											<span v-if="getVmixScene(vmixSceneMap[getRowKey(row)])?.number"
+												class="inline-block font-mono font-bold text-sm mb-1 px-1.5 py-0.5 rounded mr-2"
+												:class="isDark ? 'bg-stone-700 text-stone-200' : 'bg-stone-300 text-stone-800'">
+												#{{ getVmixScene(vmixSceneMap[getRowKey(row)]).number }}
+											</span>
 											<!-- 場景名稱，顏色依 MAIN pgm/pvw 狀態 -->
 											<span class="text-xs font-medium break-all leading-tight"
 												:class="(isDark ? 'text-stone-400' : 'text-stone-500')">
@@ -1012,7 +1020,7 @@ const currentRowIndex = computed(() => {
 																<span class="font-mono tabular-nums">{{
 																	summary.elapsed
 																}}</span>
-																　-<span class="font-mono tabular-nums">{{
+																　/　-<span class="font-mono tabular-nums">{{
 																	summary.remaining
 																}}</span>
 															</span>
@@ -1028,7 +1036,7 @@ const currentRowIndex = computed(() => {
 																<template v-else-if="pgmListScheduleDiff > 0">延遲 {{
 																	pgmListScheduleDiff }}s</template>
 																<template v-else>超前 {{ Math.abs(pgmListScheduleDiff)
-																	}}s</template>
+																}}s</template>
 															</span>
 														</template>
 													</th>
@@ -1040,7 +1048,7 @@ const currentRowIndex = computed(() => {
 																<span class="font-mono tabular-nums">{{
 																	summarySpare.elapsed
 																}}</span>
-																　- <span class="font-mono tabular-nums">{{
+																　/　-<span class="font-mono tabular-nums">{{
 																	summarySpare.remaining
 																}}</span>
 															</span>
@@ -1077,7 +1085,7 @@ const currentRowIndex = computed(() => {
 															<span v-if="j === currentIdx && cueProgress"
 																class="block font-mono tabular-nums text-[10px] leading-tight mt-0.5"
 																:class="isDark ? 'text-amber-400/70' : 'text-amber-700'">
-																{{ cueProgress.elapsed }}　- {{
+																{{ cueProgress.elapsed }}　/　-{{
 																	cueProgress.remaining }}
 															</span>
 														</td>
@@ -1088,7 +1096,7 @@ const currentRowIndex = computed(() => {
 															<span v-if="j === currentIdxSpare && cueProgressSpare"
 																class="block font-mono tabular-nums text-[10px] leading-tight mt-0.5"
 																:class="isDark ? 'text-amber-400/70' : 'text-amber-700'">
-																{{ cueProgressSpare.elapsed }}　- {{
+																{{ cueProgressSpare.elapsed }}　/　-{{
 																	cueProgressSpare.remaining }}
 															</span>
 														</td>

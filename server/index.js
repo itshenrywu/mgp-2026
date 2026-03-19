@@ -494,7 +494,6 @@ wss.on('connection', (ws, req) => {
 
 	const inst = vmixInstances.get(vmixId)
 	const ip = req.socket.remoteAddress
-	console.log(`[WS] 客戶端連線 ${ip}（vmix=${vmixId}），目前共 ${wss.clients.size} 個`)
 
 	// 新客戶端連線時，立即推送目前狀態
 	if (inst) {
@@ -528,7 +527,7 @@ wss.on('connection', (ws, req) => {
 	})
 
 	ws.on('close', () => {
-		console.log(`[WS] 客戶端斷線（vmix=${vmixId}），剩餘 ${wss.clients.size} 個`)
+		
 	})
 
 	ws.on('error', (err) => {
