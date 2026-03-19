@@ -298,6 +298,30 @@ onMounted(async () => {
 		if (storedHostMain) vmixHostMain.value = storedHostMain
 		const storedHostSpare = localStorage.getItem('rundown-vmix-host-spare')
 		if (storedHostSpare) vmixHostSpare.value = storedHostSpare
+
+		// 舊資料遷移：vmixSceneMap 由存 title → 改存 number
+		// 若 value 不是已知的 number，嘗試用 title 反查 number 並更新
+		const allKnown = [...vmixKnownScenesMain.value, ...vmixKnownScenesSpare.value]
+		let needsMigration = false
+		const migratedMap = {}
+		for (const [key, val] of Object.entries(vmixSceneMap.value)) {
+			const byNum = allKnown.find((s) => s.number === val)
+			if (!byNum) {
+				const byTitle = allKnown.find((s) => s.title === val)
+				if (byTitle) {
+					migratedMap[key] = byTitle.number
+					needsMigration = true
+				} else {
+					migratedMap[key] = val
+				}
+			} else {
+				migratedMap[key] = val
+			}
+		}
+		if (needsMigration) {
+			vmixSceneMap.value = migratedMap
+			saveVmixSceneMap()
+		}
 	} catch (_) { }
 	// 向伺服器取得目前 vMix 主機設定
 	try {
@@ -407,34 +431,35 @@ async function saveVmixHost(id) {
 }
 
 
-// 依場景名稱從 vmixKnownScenes 找到完整物件
-function getVmixScene(title) {
-	if (!title) return null
-	return vmixKnownScenes.value.find((s) => (s.title ?? s) === title) ?? null
+// 依 input number 從 vmixKnownScenes 找到完整物件
+function getVmixScene(number) {
+	if (number == null || number === '') return null
+	return vmixKnownScenes.value.find((s) => s.number === number) ?? null
 }
 
 // 判斷該列對應的 vMix 場景是否為 VideoList 類型
 function hasListTag(row) {
-	const sceneName = vmixSceneMap.value[getRowKey(row)]
-	if (!sceneName) return false
-	const scene = getVmixScene(sceneName)
+	const sceneNum = vmixSceneMap.value[getRowKey(row)]
+	if (!sceneNum) return false
+	const scene = getVmixScene(sceneNum)
 	return scene ? scene.type === 'VideoList' : false
 }
 
 // 從 vMix 場景取得 List 子項目（{ cue, duration }）
 function getListItems(row) {
-	const sceneName = vmixSceneMap.value[getRowKey(row)]
-	if (!sceneName) return []
-	const scene = getVmixScene(sceneName)
+	const sceneNum = vmixSceneMap.value[getRowKey(row)]
+	if (!sceneNum) return []
+	const scene = getVmixScene(sceneNum)
 	if (!scene || !Array.isArray(scene.items)) return []
 	return scene.items.map((item) => ({ cue: item.name, duration: item.duration }))
 }
 
 // 判斷該列是否為目前播放中的 PGM list
 function isPgmListRow(row) {
+	const num = vmixSceneMap.value[getRowKey(row)]
 	return pgmSceneType.value === 'list'
 		&& !!pgmName.value
-		&& vmixSceneMap.value[getRowKey(row)] === pgmName.value
+		&& getVmixScene(num)?.title === pgmName.value
 }
 
 // 目前 PGM list 已播秒數（每秒隨 now 更新）
@@ -463,7 +488,7 @@ const pgmListScheduleDiff = computed(() => {
 // 正值 = 延遲（表定已結束但 vMix 仍在播放）；負值 = 超前；0 = 時間在表定範圍內
 const vmixNonListScheduleDiff = computed(() => {
 	if (!pgmName.value || pgmSceneType.value === 'list') return null
-	const row = rows.value.find(r => vmixSceneMap.value[getRowKey(r)] === pgmName.value)
+	const row = rows.value.find(r => getVmixScene(vmixSceneMap.value[getRowKey(r)])?.title === pgmName.value)
 	if (!row) return null
 	const nowSec = nowTimeSeconds.value
 	const startSec = timeStrToSeconds(row['開始時間'])
@@ -483,7 +508,7 @@ const activeScheduleDiff = computed(() => {
 // 目前 vMix MAIN PGM 對應的表定列（供 UI 顯示參考）
 const vmixPgmRow = computed(() => {
 	if (!pgmName.value) return null
-	return rows.value.find(r => vmixSceneMap.value[getRowKey(r)] === pgmName.value) ?? null
+	return rows.value.find(r => getVmixScene(vmixSceneMap.value[getRowKey(r)])?.title === pgmName.value) ?? null
 })
 
 // 依 elapsed 計算目前播到第幾個 cue（0-based index），找不到回傳 -1
@@ -543,9 +568,10 @@ const pgmListElapsedSpare = computed(() => {
 })
 
 function isPgmListRowSpare(row) {
+	const num = vmixSceneMap.value[getRowKey(row)]
 	return pgmSceneTypeSpare.value === 'list'
 		&& !!pgmNameSpare.value
-		&& vmixSceneMap.value[getRowKey(row)] === pgmNameSpare.value
+		&& getVmixScene(num)?.title === pgmNameSpare.value
 }
 
 function getListCurrentCueIdxSpare(row) {
@@ -974,9 +1000,9 @@ const currentRowIndex = computed(() => {
 											class="w-full rounded px-1.5 py-1 text-xs border focus:outline-none focus:ring-2 focus:ring-amber-500/50"
 											:class="isDark ? 'bg-stone-700 border-stone-500 text-stone-100' : 'bg-white border-stone-400 text-stone-900'">
 											<option value="">—</option>
-											<option v-for="scene in vmixKnownScenes" :key="scene.title ?? scene"
-												:value="scene.title ?? scene">{{
-													scene.title ?? scene }}</option>
+										<option v-for="scene in vmixKnownScenes" :key="scene.number ?? scene"
+											:value="scene.number ?? scene">{{ `[${scene.number}] ` +
+												scene.title ?? scene }}</option>
 										</select>
 									</template>
 									<template v-else>
@@ -987,31 +1013,31 @@ const currentRowIndex = computed(() => {
 												:class="isDark ? 'bg-stone-700 text-stone-200' : 'bg-stone-300 text-stone-800'">
 												#{{ getVmixScene(vmixSceneMap[getRowKey(row)]).number }}
 											</span>
-											<!-- 場景名稱，顏色依 MAIN pgm/pvw 狀態 -->
-											<span class="text-xs font-medium break-all leading-tight"
-												:class="(isDark ? 'text-stone-400' : 'text-stone-500')">
-												{{ vmixSceneMap[getRowKey(row)] }}
-											</span>
+										<!-- 場景名稱，顏色依 MAIN pgm/pvw 狀態 -->
+										<span class="text-xs font-medium break-all leading-tight"
+											:class="(isDark ? 'text-stone-400' : 'text-stone-500')">
+											{{ getVmixScene(vmixSceneMap[getRowKey(row)])?.title ?? vmixSceneMap[getRowKey(row)] }}
+										</span>
 											<!-- 狀態標籤：MAIN PGM / MAIN PVW / SPARE PGM / SPARE PVW -->
 											<div class="flex flex-row flex-wrap items-center justify-center gap-2 mt-1">
-												<span v-if="pgmName && vmixSceneMap[getRowKey(row)] === pgmName"
-													class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-red-600 text-white">
-													MAIN PGM
-												</span>
-												<span v-if="pvwName && vmixSceneMap[getRowKey(row)] === pvwName"
-													class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-green-600 text-white">
-													MAIN PVW
-												</span>
-												<span
-													v-if="pgmNameSpare && vmixSceneMap[getRowKey(row)] === pgmNameSpare"
-													class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-red-100 text-red-600">
-													SPARE PGM
-												</span>
-												<span
-													v-if="pvwNameSpare && vmixSceneMap[getRowKey(row)] === pvwNameSpare"
-													class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-green-100 text-green-600">
-													SPARE PVW
-												</span>
+										<span v-if="pgmName && getVmixScene(vmixSceneMap[getRowKey(row)])?.title === pgmName"
+												class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-red-600 text-white">
+												MAIN PGM
+											</span>
+											<span v-if="pvwName && getVmixScene(vmixSceneMap[getRowKey(row)])?.title === pvwName"
+												class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-green-600 text-white">
+												MAIN PVW
+											</span>
+											<span
+												v-if="pgmNameSpare && getVmixScene(vmixSceneMap[getRowKey(row)])?.title === pgmNameSpare"
+												class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-red-100 text-red-600">
+												SPARE PGM
+											</span>
+											<span
+												v-if="pvwNameSpare && getVmixScene(vmixSceneMap[getRowKey(row)])?.title === pvwNameSpare"
+												class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-green-100 text-green-600">
+												SPARE PVW
+											</span>
 											</div>
 										</template>
 										<span v-else :class="isDark ? 'text-stone-600' : 'text-stone-400'">—</span>
@@ -1099,7 +1125,7 @@ const currentRowIndex = computed(() => {
 														<!-- 長度 -->
 														<td class="px-3 py-1 text-right tabular-nums font-mono"
 															:class="isDark ? 'text-stone-300' : 'text-stone-600'">
-															{{ formatListDuration(item.duration) }}
+															{{ item.duration > 0 ? formatListDuration(item.duration) : '—' }}
 														</td>
 														<!-- MAIN 指示欄 -->
 														<td class="px-2 py-1 text-center align-top">

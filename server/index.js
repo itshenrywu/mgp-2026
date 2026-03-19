@@ -17,6 +17,7 @@ import express from 'express'
 import { createServer } from 'http'
 import { WebSocketServer, WebSocket } from 'ws'
 import cors from 'cors'
+import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { XMLParser } from 'fast-xml-parser'
@@ -36,122 +37,122 @@ const xmlParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: 
 
 const TEST_MODE = process.env.TEST_MODE === 'true' || process.env.TEST_MODE === '1'
 
-/**
- * 南霸天 2026-03-21 節目表
- * startSec / endSec = 距午夜的秒數，用於對照現在時刻自動推算 PGM
- */
-function makeTestItems(count, totalDuration) {
-	const duration = Math.floor(totalDuration / count)
-	return Array.from({ length: count }, (_, i) => ({ name: `List Item ${i + 1}`, duration }))
-}
-
-const TEST_LIST_ITEMS = {
-	'[List] List 1 (ML1)':  makeTestItems(5, 50850 - 47400), // 3450s → 690s/item
-	'[List] List 2 (ML2)':  makeTestItems(5, 56850 - 53400), // 3450s → 690s/item
-	'[List] List 3 (ML3)':  makeTestItems(5, 62850 - 59400), // 3450s → 690s/item
-	'[List] List 4 (ML4)':  makeTestItems(5, 68850 - 65400), // 3450s → 690s/item
-	'[List] List 5 (ML5)':  makeTestItems(5, 75930 - 71400), // 4530s → 906s/item
-}
-
-const TEST_SCENES = [
-	{ title: '測試',                              type: 'Virtual',   number: '1',  startSec: 0,     endSec: 41400 },
-	{ title: '開播前字卡',                         type: 'Virtual',   number: '2',  startSec: 44400, endSec: 44700 },
-	{ title: 'Kate 包框 180s_早',                 type: 'Virtual',   number: '3',  startSec: 44700, endSec: 44880 },
-	{ title: '[Next On] 椅子樂團',                type: 'Virtual',   number: '4',  startSec: 44880, endSec: 45000 },
-	{ title: '[PGM] 椅子樂團',                    type: 'Virtual',   number: '5',  startSec: 45000, endSec: 47400 },
-	{ title: '[List] List 1 (ML1)',               type: 'VideoList', number: '6',  startSec: 47400, endSec: 50850, items: TEST_LIST_ITEMS['[List] List 1 (ML1)'] },
-	{ title: '[Next On] The Birthday (JP)',        type: 'Virtual',   number: '7',  startSec: 50850, endSec: 51000 },
-	{ title: '[PGM] The Birthday (JP)',           type: 'Virtual',   number: '8',  startSec: 51000, endSec: 53400 },
-	{ title: '[List] List 2 (ML2)',               type: 'VideoList', number: '9',  startSec: 53400, endSec: 56850, items: TEST_LIST_ITEMS['[List] List 2 (ML2)'] },
-	{ title: '[Next On] Aooo (JP)',               type: 'Virtual',   number: '10', startSec: 56850, endSec: 57000 },
-	{ title: '[PGM] Aooo (JP)',                   type: 'Virtual',   number: '11', startSec: 57000, endSec: 59400 },
-	{ title: '[List] List 3 (ML3)',               type: 'VideoList', number: '12', startSec: 59400, endSec: 62850, items: TEST_LIST_ITEMS['[List] List 3 (ML3)'] },
-	{ title: '[Next On] 滅火器',                  type: 'Virtual',   number: '13', startSec: 62850, endSec: 63000 },
-	{ title: '[PGM] 滅火器',                      type: 'Virtual',   number: '14', startSec: 63000, endSec: 65400 },
-	{ title: '[List] List 4 (ML4)',               type: 'VideoList', number: '15', startSec: 65400, endSec: 68850, items: TEST_LIST_ITEMS['[List] List 4 (ML4)'] },
-	{ title: '[Next On] milet (JP)',              type: 'Virtual',   number: '16', startSec: 68850, endSec: 69000 },
-	{ title: '[PGM] milet (JP)',                  type: 'Virtual',   number: '17', startSec: 69000, endSec: 71400 },
-	{ title: '[List] List 5 (ML5)',               type: 'VideoList', number: '18', startSec: 71400, endSec: 75930, items: TEST_LIST_ITEMS['[List] List 5 (ML5)'] },
-	{ title: '[Next On] 血肉果汁機 ft. 陳亞蘭',    type: 'Virtual',   number: '19', startSec: 75930, endSec: 76200 },
-	{ title: '[PGM] 血肉果汁機 ft. 陳亞蘭',        type: 'Virtual',   number: '20', startSec: 76200, endSec: 78600 },
-	{ title: 'Day1 收播字卡',                      type: 'Virtual',   number: '21', startSec: 78600, endSec: 79200 },
-]
+const TEST_XML_PATH = join(__dirname, '../data/api.xml')
 
 /**
- * 依目前時刻（時間部分）找出對應的場景索引。
- * 若在排程時間外則回傳 -1。
+ * 讀取 data/api.xml 並解析成 inputs + active + preview，
+ * 格式與 fetchVmixState 解析真實 API 的結果一致。
  */
-function getTimeBasedSceneIdx() {
-	const now = new Date()
-	const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
-	return TEST_SCENES.findIndex((s) => nowSec >= s.startSec && nowSec < s.endSec)
-}
+function loadTestDataFromXml() {
+	try {
+		const xml = readFileSync(TEST_XML_PATH, 'utf-8')
+		const parsed = xmlParser.parse(xml)
+		const vmix = parsed?.vmix
+		if (!vmix) throw new Error('XML 格式錯誤，缺少 <vmix> 根節點')
 
-/**
- * 每個 instance 的測試狀態（pgmIdx、pvwIdx 各自獨立）
- * @type {Map<string, { pgmIdx: number, pvwIdx: number }>}
- */
-const testState = new Map([
-	['main',  { pgmIdx: 0, pvwIdx: 1 }],
-	['spare', { pgmIdx: 0, pvwIdx: 1 }],
-])
+		const inputsRaw = vmix.inputs?.input
+		const inputsArr = Array.isArray(inputsRaw) ? inputsRaw : (inputsRaw ? [inputsRaw] : [])
 
-function getTestState(id) {
-	if (!testState.has(id)) testState.set(id, { pgmIdx: 0, pvwIdx: 1 })
-	return testState.get(id)
-}
+		const inputs = inputsArr.map((inp) => {
+			const input = {
+				number: String(inp['@_number'] ?? ''),
+				title: String( (inp['@_type'] === 'VideoList' ? (inp['@_shortTitle'] ?? inp['@_title'] ?? '') : (inp['@_title'] ?? inp['@_shortTitle'] ?? '')) ),
+				type: String(inp['@_type'] ?? ''),
+				position: Number(inp['@_position'] ?? 0),
+			}
+			if (input.type === 'VideoList') {
+				const listRaw = inp.list?.item
+				const listArr = Array.isArray(listRaw) ? listRaw : (listRaw ? [listRaw] : [])
+				input.items = listArr.map((item) => {
+					// XML 中 item 為純文字路徑；selected="true" 的 item 會被解析成物件
+					const isObj = typeof item === 'object' && item !== null
+					const path = isObj ? String(item['#text'] ?? '') : String(item)
+					const filename = path.split(/[\\/]/).pop() ?? ''
+					const name = filename.replace(/\.[^/.]+$/, '')
+					const selected = isObj
+						? String(item['@_selected'] ?? 'False').toLowerCase() === 'true'
+						: false
+					return { name, duration: getDuration(path), selected }
+				})
+			}
+			return input
+		})
 
-function broadcastTestScene(inst, type, idx) {
-	const n = TEST_SCENES.length
-	const scene = TEST_SCENES[((idx % n) + n) % n]
-	if (type === 'pgm') {
-		inst.lastPgmTitle = scene.title
-		const payload = { type: 'pgm', name: scene.title }
-		if (scene.type === 'VideoList') {
-			payload.scene_type = 'list'
-			// 計算在目前時間點 list 已播放了多少秒（依時間表推算）
-			const now = new Date()
-			const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
-			payload.started = Math.max(0, nowSec - scene.startSec)
-		}
-		inst.lastPgmPayload = payload
-		broadcastToId(inst.id, payload)
-	} else {
-		inst.lastPvwTitle = scene.title
-		broadcastToId(inst.id, { type: 'pvw', name: scene.title })
+		const active = String(vmix.active ?? '')
+		const preview = String(vmix.preview ?? '')
+		return { inputs, active, preview }
+	} catch (err) {
+		console.error('[TEST] 無法讀取 api.xml:', err.message)
+		return null
 	}
-	return scene.title
+}
+
+function getDuration(item) {
+	console.log('=' , item)
+	const durationMapping = [
+		// 廣告
+		['2026_MegaportCF_30s', 30],
+		['尾一_Alcon', 30],
+
+		// 中插
+		['中插 1 to 4', 120],
+		['中插 5 to 8', 120],
+
+		// 節目表
+		['STG1-D1-DAY', 300],
+		['STG1-D1-NIGHT', 300],
+		['STG1-D2-DAY', 300],
+		['STG1-D2-NIGHT', 300],
+		['STG2-D1-DAY', 300],
+		['STG2-D1-NIGHT', 300],
+		['STG2-D2-DAY', 300],
+		['STG2-D2-NIGHT', 300],
+
+		// 包框影片
+		['包框影片', 180]
+	]
+	for (const [filename, duration] of durationMapping) {
+		const isObj = typeof item === 'object' && item !== null
+		const path = isObj ? String(item['#text'] ?? '') : String(item)
+		if (path.includes(filename)) return duration
+	}
+	return 0
 }
 
 function startTestMode(inst) {
 	if (inst.pollTimer) clearInterval(inst.pollTimer)
 
-	inst.connected = true
-	inst.inputs = TEST_SCENES
-	broadcastToId(inst.id, { type: 'vmix-status', connected: true })
-	broadcastToId(inst.id, { type: 'inputs', inputs: TEST_SCENES })
-
-	const applyTimeBasedState = () => {
-		const s = getTestState(inst.id)
-		const n = TEST_SCENES.length
-		const idx = getTimeBasedSceneIdx()
-		const pgmIdx = idx >= 0 ? idx : 0
-		const pvwIdx = (pgmIdx + 1) % n
-		if (pgmIdx === s.pgmIdx && pvwIdx === s.pvwIdx) return
-		s.pgmIdx = pgmIdx
-		s.pvwIdx = pvwIdx
-		const pgm = broadcastTestScene(inst, 'pgm', pgmIdx)
-		const pvw = broadcastTestScene(inst, 'pvw', pvwIdx)
-		console.log(`[TEST:${inst.id}] 時間切換 PGM → ${pgm} / PVW → ${pvw}`)
+	const testData = loadTestDataFromXml()
+	if (!testData) {
+		console.error(`[TEST:${inst.id}] 無法載入測試資料，請確認 data/api.xml 存在`)
+		return
 	}
 
-	// 廣播初始狀態
-	applyTimeBasedState()
-	const s = getTestState(inst.id)
-	console.log(`[TEST:${inst.id}] 測試模式啟動（依時間表模擬）PGM=${inst.lastPgmTitle} / PVW=${inst.lastPvwTitle}`)
+	inst.connected = true
+	inst.inputs = testData.inputs
+	broadcastToId(inst.id, { type: 'vmix-status', connected: true })
+	broadcastToId(inst.id, { type: 'inputs', inputs: testData.inputs.filter((i) => i.title) })
 
-	// 每秒檢查一次是否需要切換
-	inst.pollTimer = setInterval(applyTimeBasedState, 1000)
+	const pgmInput = testData.inputs.find((i) => i.number === testData.active)
+	const pvwInput = testData.inputs.find((i) => i.number === testData.preview)
+
+	if (pgmInput) {
+		inst.lastPgmTitle = pgmInput.title
+		const payload = { type: 'pgm', name: pgmInput.title }
+		if (pgmInput.type === 'VideoList') {
+			payload.scene_type = 'list'
+			payload.started = Math.round(pgmInput.position / 1000)
+		}
+		inst.lastPgmPayload = payload
+		broadcastToId(inst.id, payload)
+	}
+
+	if (pvwInput) {
+		inst.lastPvwTitle = pvwInput.title
+		broadcastToId(inst.id, { type: 'pvw', name: pvwInput.title })
+	}
+
+	console.log(`[TEST:${inst.id}] 測試模式啟動（data/api.xml）PGM=${inst.lastPgmTitle} / PVW=${inst.lastPvwTitle}`)
 }
 
 // ── vMix 多 instance 管理 ──────────────────────────────────────────────────
@@ -238,7 +239,7 @@ async function fetchVmixState(inst) {
 					const name = filename ? filename.split(/[\\/]/).pop().replace(/\.[^/.]+$/, '') : ''
 					return {
 						name,
-						duration: Math.round(Number(item['@_duration'] ?? 0) / 1000),
+						duration: getDuration(filename),
 						selected: String(item['@_selected'] ?? 'False').toLowerCase() === 'true',
 					}
 				})
@@ -401,23 +402,19 @@ app.post('/broadcast', (req, res) => {
 app.get('/test/status', (req, res) => {
 	const instances = []
 	for (const [id, inst] of vmixInstances) {
-		const s = getTestState(id)
-		const n = TEST_SCENES.length
 		instances.push({
 			id,
 			testMode: TEST_MODE,
 			pgm: inst.lastPgmTitle,
 			pvw: inst.lastPvwTitle,
-			pgmIdx: s.pgmIdx,
-			pvwIdx: s.pvwIdx,
-			scenes: TEST_SCENES.map((sc, i) => ({ ...sc, isCurrent: i === ((s.pgmIdx % n + n) % n) })),
+			inputs: inst.inputs.filter((i) => i.title),
 		})
 	}
 	res.json({ ok: true, testMode: TEST_MODE, instances })
 })
 
 // 手動設定指定 instance 的 PGM 或 PVW（TEST_MODE 下才有效果，但任何時候都可廣播）
-// body: { vmixId: 'main', type: 'pgm'|'pvw', name: '場景名稱' }
+// body: { vmixId: 'main', type: 'pgm'|'pvw', name: 'Input 標題' }
 app.post('/test/set', (req, res) => {
 	const { vmixId = 'main', type, name } = req.body ?? {}
 	if (!type || !['pgm', 'pvw'].includes(type)) {
@@ -428,16 +425,16 @@ app.post('/test/set', (req, res) => {
 	const inst = vmixInstances.get(vmixId)
 	if (!inst) return res.status(404).json({ ok: false, error: `instance '${vmixId}' 不存在` })
 
-	const sceneIdx = TEST_SCENES.findIndex((s) => s.title === name)
-	const state = getTestState(vmixId)
-	if (sceneIdx !== -1) {
-		if (type === 'pgm') state.pgmIdx = sceneIdx
-		else state.pvwIdx = sceneIdx
-	}
-
 	if (type === 'pgm') {
+		const pgmInput = inst.inputs.find((i) => i.title === name)
 		inst.lastPgmTitle = name
-		broadcastToId(vmixId, { type: 'pgm', name })
+		const payload = { type: 'pgm', name }
+		if (pgmInput?.type === 'VideoList') {
+			payload.scene_type = 'list'
+			payload.started = 0
+		}
+		inst.lastPgmPayload = payload
+		broadcastToId(vmixId, payload)
 	} else {
 		inst.lastPvwTitle = name
 		broadcastToId(vmixId, { type: 'pvw', name })
@@ -446,21 +443,38 @@ app.post('/test/set', (req, res) => {
 	res.json({ ok: true, vmixId, type, name })
 })
 
-// 手動推進到下一個場景（PGM+PVW 同時往前一格）
+// 手動推進到下一個 input（PGM+PVW 同時往前一格）
 // POST /test/next/:id  （id = 'main' | 'spare'）
 app.post('/test/next/:id', (req, res) => {
 	const { id } = req.params
 	const inst = vmixInstances.get(id)
 	if (!inst) return res.status(404).json({ ok: false, error: `instance '${id}' 不存在` })
 
-	const s = getTestState(id)
-	const n = TEST_SCENES.length
-	s.pgmIdx = (s.pgmIdx + 1) % n
-	s.pvwIdx = (s.pvwIdx + 1) % n
-	const pgm = broadcastTestScene(inst, 'pgm', s.pgmIdx)
-	const pvw = broadcastTestScene(inst, 'pvw', s.pvwIdx)
-	console.log(`[TEST:${id}] 手動 Next → PGM=${pgm} / PVW=${pvw}`)
-	res.json({ ok: true, id, pgm, pvw })
+	const inputs = inst.inputs.filter((i) => i.title)
+	const n = inputs.length
+	if (n === 0) return res.status(400).json({ ok: false, error: '無可用 inputs' })
+
+	const pgmIdx = inputs.findIndex((i) => i.title === inst.lastPgmTitle)
+	const newPgmIdx = ((pgmIdx + 1) % n + n) % n
+	const newPvwIdx = ((newPgmIdx + 1) % n + n) % n
+
+	const pgmInput = inputs[newPgmIdx]
+	const pvwInput = inputs[newPvwIdx]
+
+	inst.lastPgmTitle = pgmInput.title
+	const payload = { type: 'pgm', name: pgmInput.title }
+	if (pgmInput.type === 'VideoList') {
+		payload.scene_type = 'list'
+		payload.started = 0
+	}
+	inst.lastPgmPayload = payload
+	broadcastToId(id, payload)
+
+	inst.lastPvwTitle = pvwInput.title
+	broadcastToId(id, { type: 'pvw', name: pvwInput.title })
+
+	console.log(`[TEST:${id}] 手動 Next → PGM=${pgmInput.title} / PVW=${pvwInput.title}`)
+	res.json({ ok: true, id, pgm: pgmInput.title, pvw: pvwInput.title })
 })
 
 // 取得目前連線數與所有 vMix 狀態

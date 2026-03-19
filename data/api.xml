@@ -1,0 +1,224 @@
+<vmix>
+	<version>29.0.0.46</version>
+	<edition>4K</edition>
+	<preset>C:\Users\badep\AppData\Roaming\last.vmix</preset>
+	<inputs>
+		<input key="f9162b0e-5d48-4db3-9af0-b041959e6d55" number="1" type="Colour" title="PGM" shortTitle="PGM" state="Paused" position="0" duration="0" loop="False">PGM</input>
+		<input key="bc2ab55b-5233-4e1a-b8ca-7d50d68e6cff" number="2" type="Colour" title="PGM MUTE" shortTitle="PGM MUTE" state="Paused" position="0" duration="0" loop="False">PGM MUTE</input>
+		<input key="77f662da-6d1f-480e-85a4-582351a21104" number="3" type="Image" title="開始字卡" shortTitle="開始字卡" state="Paused" position="0" duration="0" loop="False">開始字卡</input>
+		<input key="a50ee057-3b3b-46ab-9866-d85a08c1853d" number="4" type="Video" title="S2D1_包01_麥當勞早.mp4" shortTitle="S2D1_包01_麥當勞早.mp4" state="Paused" position="0" duration="180203" loop="False" muted="True" volume="100" balance="0" solo="False" soloPFL="False" audiobusses="M" meterF1="0" meterF2="0" gainDb="0">S2D1_包01_麥當勞早.mp4</input>
+		<input key="0ae5b84e-c842-4800-9900-1807d93c7cbd" number="5" type="Image" title="Next_1_海豚刑警.png" shortTitle="Next_1_海豚刑警.png" state="Paused" position="0" duration="0" loop="False">Next_1_海豚刑警.png</input>
+		<input key="e14a6fec-1c6e-4ec1-b46b-6c2069684e64" number="6" type="Colour" title="NEXT 海豚刑警" shortTitle="NEXT 海豚刑警" state="Paused" position="0" duration="0" loop="False">NEXT 海豚刑警
+			<overlay index="0" key="bc2ab55b-5233-4e1a-b8ca-7d50d68e6cff" />
+			<overlay index="1" key="0ae5b84e-c842-4800-9900-1807d93c7cbd" />
+		</input>
+		<input key="85c2741f-6902-4223-9d30-74d0d76740c7" number="7" type="Image" title="CG-12.png" shortTitle="CG-12.png" state="Paused" position="0" duration="0" loop="False">CG-12.png</input>
+		<input key="62e255b2-7a99-4c41-8fd7-c3ce8e760619" number="8" type="Colour" title="PGM海豚" shortTitle="PGM海豚" state="Paused" position="0" duration="0" loop="False">PGM海豚
+			<overlay index="0" key="f9162b0e-5d48-4db3-9af0-b041959e6d55" />
+			<overlay index="1" key="85c2741f-6902-4223-9d30-74d0d76740c7" />
+		</input>
+		<input key="34d264a4-249d-4871-9607-a81844dc9e5c" number="9" type="VideoList" title="廣告1 - 尾一_Alcon.mp4" shortTitle="廣告1" state="Paused" position="0" duration="20011" loop="False" muted="True" volume="100" balance="0" solo="False" soloPFL="False" audiobusses="M" meterF1="0" meterF2="0" gainDb="0" selectedIndex="1">廣告1 - 尾一_Alcon.mp4
+			<list>
+				<item selected="true">C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\2026_MegaportCF_30s_-16LU.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML1\ML1.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-DAY.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML1\ML1.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-DAY.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML1\ML1.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-1包框影片_180s\S2 女神龍\S2D1_包02_Kate早.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+			</list>
+		</input>
+		<input key="0e1b13fc-54ee-4d60-9115-b3ecf18358a1" number="10" type="Image" title="Next_2_漂流出口.png" shortTitle="Next_2_漂流出口.png" state="Paused" position="0" duration="0" loop="False">Next_2_漂流出口.png</input>
+		<input key="61b725c2-7a3f-49c5-a649-eee492288cda" number="11" type="Colour" title="NEXT漂流" shortTitle="NEXT漂流" state="Paused" position="0" duration="0" loop="False">NEXT漂流
+			<overlay index="0" key="bc2ab55b-5233-4e1a-b8ca-7d50d68e6cff" />
+			<overlay index="1" key="0e1b13fc-54ee-4d60-9115-b3ecf18358a1" />
+		</input>
+		<input key="1839b8f4-95bd-440e-a00d-348a3330bd44" number="12" type="Image" title="CG-13.png" shortTitle="CG-13.png" state="Paused" position="0" duration="0" loop="False">CG-13.png</input>
+		<input key="4efc3682-b2ad-4f65-8c21-a164ed682209" number="13" type="Colour" title="PGM漂流" shortTitle="PGM漂流" state="Paused" position="0" duration="0" loop="False">PGM漂流
+			<overlay index="0" key="f9162b0e-5d48-4db3-9af0-b041959e6d55" />
+			<overlay index="1" key="1839b8f4-95bd-440e-a00d-348a3330bd44" />
+		</input>
+		<input key="cdee139b-1f63-4192-a9b6-ab476bb5dbab" number="14" type="VideoList" title="廣告2 - S2D1_包03_麥當勞早.mp4" shortTitle="廣告2" state="Paused" position="5706" duration="180203" loop="False" muted="True" volume="100" balance="0" solo="False" soloPFL="False" audiobusses="M" meterF1="0" meterF2="0" gainDb="0" selectedIndex="12">廣告2 - S2D1_包03_麥當勞早.mp4
+			<list>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\2026_MegaportCF_30s_-16LU.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML2\ML2.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-DAY.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML2\ML2.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-DAY.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML2\ML2.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item selected="true">C:\MGPT\大港素材整理\3-1包框影片_180s\S2 女神龍\S2D1_包03_麥當勞早.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+			</list>
+		</input>
+		<input key="8d46658a-d7be-408e-a42d-a58247da33be" number="15" type="Image" title="Next_3_南瓜泥.png" shortTitle="Next_3_南瓜泥.png" state="Paused" position="0" duration="0" loop="False">Next_3_南瓜泥.png</input>
+		<input key="ff2b143d-d40d-49e8-acf7-ed5e30d35b80" number="16" type="Colour" title="NEXT 南瓜妮" shortTitle="NEXT 南瓜妮" state="Paused" position="0" duration="0" loop="False">NEXT 南瓜妮
+			<overlay index="0" key="bc2ab55b-5233-4e1a-b8ca-7d50d68e6cff" />
+			<overlay index="1" key="8d46658a-d7be-408e-a42d-a58247da33be" />
+		</input>
+		<input key="87ec222d-3006-482d-9582-6c07d23f4c54" number="17" type="Image" title="CG-14.png" shortTitle="CG-14.png" state="Paused" position="0" duration="0" loop="False">CG-14.png</input>
+		<input key="d65d5f25-d64e-471f-9e00-f17ab5917a43" number="18" type="Colour" title="PGM 南瓜妮" shortTitle="PGM 南瓜妮" state="Paused" position="0" duration="0" loop="False">PGM 南瓜妮
+			<overlay index="0" key="f9162b0e-5d48-4db3-9af0-b041959e6d55" />
+			<overlay index="1" key="87ec222d-3006-482d-9582-6c07d23f4c54" />
+		</input>
+		<input key="efc215d1-9498-4477-9251-a8183d37a611" number="19" type="VideoList" title="廣告3 - a" shortTitle="廣告3" state="Paused" position="23023" duration="30059" loop="False" muted="False" volume="100" balance="0" solo="False" soloPFL="False" audiobusses="M" meterF1="0" meterF2="0" gainDb="0" selectedIndex="2">廣告3 - 2026_MegaportCF_30s_-16LU.mp4
+			<list>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+				<item selected="true">C:\MGPT\大港素材整理\3-2廣告素材\2026_MegaportCF_30s_-16LU.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML3\ML3.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-DAY.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML3\ML3.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-DAY.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML3\ML3.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-DAY.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML3\ML3.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-1包框影片_180s\S2 女神龍\S2D1_包04_Kate早.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+			</list>
+		</input>
+		<input key="385ffea6-01f7-441e-864e-3e184a2c514d" number="20" type="Image" title="Next_4_The Band Apart.png" shortTitle="Next_4_The Band Apart.png" state="Paused" position="0" duration="0" loop="False">Next_4_The Band Apart.png</input>
+		<input key="fdbea311-2aed-49df-86de-1ba39ee61e9d" number="21" type="Colour" title="NEXT the band apart" shortTitle="NEXT the band apart" state="Paused" position="0" duration="0" loop="False">NEXT the band apart
+			<overlay index="0" key="bc2ab55b-5233-4e1a-b8ca-7d50d68e6cff" />
+			<overlay index="1" key="385ffea6-01f7-441e-864e-3e184a2c514d" />
+		</input>
+		<input key="a52af464-2e36-4f9f-9027-75b90492e33d" number="22" type="Image" title="CG-15.png" shortTitle="CG-15.png" state="Paused" position="0" duration="0" loop="False">CG-15.png</input>
+		<input key="eef75e1b-46cc-4c7c-9f94-a66f91b66afe" number="23" type="Colour" title="PGM the band apart" shortTitle="PGM the band apart" state="Paused" position="0" duration="0" loop="False">PGM the band apart
+			<overlay index="0" key="f9162b0e-5d48-4db3-9af0-b041959e6d55" />
+			<overlay index="1" key="a52af464-2e36-4f9f-9027-75b90492e33d" />
+		</input>
+		<input key="fe1905e4-1079-4c28-9eb8-a68657b33e9b" number="24" type="VideoList" title="廣告4 - 尾一_Alcon.mp4" shortTitle="廣告4" state="Paused" position="11445" duration="20011" loop="False" muted="True" volume="100" balance="0" solo="False" soloPFL="False" audiobusses="M" meterF1="0" meterF2="0" gainDb="0" selectedIndex="13">廣告4 - 尾一_Alcon.mp4
+			<list>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\2026_MegaportCF_30s_-16LU.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML4\ML4.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-DAY.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML4\ML4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-DAY.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML4\ML4.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-1包框影片_180s\S2 女神龍\S2D1_包05_麥當勞早.mp4</item>
+				<item selected="true">C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+			</list>
+		</input>
+		<input key="73a2f3f2-219c-490c-89ee-bdb5d0a919f4" number="25" type="Image" title="不直播字卡-02.png" shortTitle="不直播字卡-02.png" state="Paused" position="0" duration="0" loop="False">不直播字卡-02.png</input>
+		<input key="c9329909-c171-4b2d-93da-98883c919b9e" number="26" type="VideoList" title="廣告5 - S2D1_包06_Kate晚普利司通晚.mp4" shortTitle="廣告5" state="Paused" position="53253" duration="360384" loop="False" muted="True" volume="100" balance="0" solo="False" soloPFL="False" audiobusses="M" meterF1="0" meterF2="0" gainDb="0" selectedIndex="13">廣告5 - S2D1_包06_Kate晚普利司通晚.mp4
+			<list>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\2026_MegaportCF_30s_-16LU.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML5\ML5.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-NIGHT.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML5\ML5.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-NIGHT.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-NIGHT.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML5\ML5.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item selected="true">C:\MGPT\大港素材整理\3-1包框影片_180s\S2 女神龍\S2D1_包06_Kate晚普利司通晚.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+			</list>
+		</input>
+		<input key="c33f7ad4-f05d-48a9-8a4b-cf5a4323b394" number="27" type="Image" title="Next_6_李竺芯.png" shortTitle="Next_6_李竺芯.png" state="Paused" position="0" duration="0" loop="False">Next_6_李竺芯.png</input>
+		<input key="90ff4c28-c27f-4f88-95e6-9f73401f2690" number="28" type="Colour" title="PGM 李竺芯" shortTitle="PGM 李竺芯" state="Paused" position="0" duration="0" loop="False">PGM 李竺芯
+			<overlay index="0" key="bc2ab55b-5233-4e1a-b8ca-7d50d68e6cff" />
+			<overlay index="1" key="c33f7ad4-f05d-48a9-8a4b-cf5a4323b394" />
+		</input>
+		<input key="a3f48cd4-8a88-4068-95a9-e6c03f6afb58" number="29" type="Image" title="CG-16.png" shortTitle="CG-16.png" state="Paused" position="0" duration="0" loop="False">CG-16.png</input>
+		<input key="c4b919d9-e665-4a4b-9930-2beffa08b871" number="30" type="Colour" title="Colour" shortTitle="Colour" state="Paused" position="0" duration="0" loop="False">Colour
+			<overlay index="0" key="f9162b0e-5d48-4db3-9af0-b041959e6d55" />
+			<overlay index="1" key="a3f48cd4-8a88-4068-95a9-e6c03f6afb58" />
+		</input>
+		<input key="e0f206a0-6445-4484-baca-d79dc11bb619" number="31" type="VideoList" title="廣告6 - 尾一_Alcon.mp4" shortTitle="廣告6" state="Paused" position="2903" duration="20011" loop="False" muted="True" volume="100" balance="0" solo="False" soloPFL="False" audiobusses="M" meterF1="0" meterF2="0" gainDb="0" selectedIndex="14">廣告6 - 尾一_Alcon.mp4
+			<list>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\2026_MegaportCF_30s_-16LU.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML6\ML6.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-NIGHT.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML6\ML6.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-NIGHT.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML6\ML6.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-4女神龍節目表影片\STG2-D1-NIGHT.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 1 to 4.mp4</item>
+				<item>C:\MGPT\大港素材整理\2-5女神龍_Media Lounge_檔案存放區\ML6\ML6.mp4</item>
+				<item>C:\MGPT\大港素材整理\3-2廣告素材\中插 5 to 8.mp4</item>
+				<item selected="true">C:\MGPT\大港素材整理\3-2廣告素材\尾一_Alcon.mp4</item>
+			</list>
+		</input>
+		<input key="8181920b-2a54-4da4-ad97-36454080efba" number="32" type="Image" title="不直播字卡-03.png" shortTitle="不直播字卡-03.png" state="Paused" position="0" duration="0" loop="False">不直播字卡-03.png</input>
+		<input key="5d4fff2b-b5bd-4118-9e45-7592443e9388" number="33" type="Image" title="收播字卡" shortTitle="收播字卡" state="Paused" position="0" duration="0" loop="False">收播字卡</input>
+	</inputs>
+	<outputs>
+		<output type="fullscreen" number="1" source="Output" />
+		<output type="fullscreen" number="2" source="Output" />
+		<output type="output" number="1" source="Output" />
+		<output type="output" number="2" source="Output" />
+		<output type="output" number="3" source="Output" />
+		<output type="output" number="4" source="Output" />
+	</outputs>
+	<overlays>
+		<overlay number="1" />
+		<overlay number="2" />
+		<overlay number="3" />
+		<overlay number="4" />
+		<overlay number="5" />
+		<overlay number="6" />
+		<overlay number="7" />
+		<overlay number="8" />
+		<overlay number="9" />
+		<overlay number="10" />
+		<overlay number="11" />
+		<overlay number="12" />
+		<overlay number="13" />
+		<overlay number="14" />
+		<overlay number="15" />
+		<overlay number="16" />
+	</overlays>
+	<preview>18</preview>
+	<active>19</active>
+	<fadeToBlack>False</fadeToBlack>
+	<transitions>
+		<transition number="1" effect="Fade" duration="300" />
+		<transition number="2" effect="Merge" duration="1000" />
+		<transition number="3" effect="Wipe" duration="1000" />
+		<transition number="4" effect="CubeZoom" duration="1000" />
+	</transitions>
+	<recording>False</recording>
+	<external>False</external>
+	<streaming>False</streaming>
+	<playList>False</playList>
+	<multiCorder>False</multiCorder>
+	<fullscreen>False</fullscreen>
+	<audio>
+		<master volume="100" muted="True" meterF1="0" meterF2="0" headphonesVolume="0" />
+	</audio>
+	<dynamic>
+		<input1></input1>
+		<input2></input2>
+		<input3></input3>
+		<input4></input4>
+		<value1></value1>
+		<value2></value2>
+		<value3></value3>
+		<value4></value4>
+	</dynamic>
+</vmix>
