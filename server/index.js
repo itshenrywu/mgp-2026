@@ -46,23 +46,35 @@ function makeTestItems(count, totalDuration) {
 }
 
 const TEST_LIST_ITEMS = {
-	'[List] List 1 (ML1)': makeTestItems(5, 54000 - 47400), // 3450s → 690s/item
-	'[List] List 2 (ML2)': makeTestItems(5, 56850 - 53400), // 3450s → 690s/item
-	'[List] List 3 (ML3)': makeTestItems(5, 62850 - 59400), // 3450s → 690s/item
-	'[List] List 4 (ML4)': makeTestItems(5, 68850 - 65400), // 3450s → 690s/item
-	'[List] List 5 (ML5)': makeTestItems(5, 75930 - 71400), // 4530s → 906s/item
+	'[List] List 1 (ML1)':  makeTestItems(5, 50850 - 47400), // 3450s → 690s/item
+	'[List] List 2 (ML2)':  makeTestItems(5, 56850 - 53400), // 3450s → 690s/item
+	'[List] List 3 (ML3)':  makeTestItems(5, 62850 - 59400), // 3450s → 690s/item
+	'[List] List 4 (ML4)':  makeTestItems(5, 68850 - 65400), // 3450s → 690s/item
+	'[List] List 5 (ML5)':  makeTestItems(5, 75930 - 71400), // 4530s → 906s/item
 }
 
 const TEST_SCENES = [
-	{ title: '測試',                           type: 'Virtual',   number: '1',  startSec: 0,     endSec: 41400 },
-	{ title: '開播前字卡',                      type: 'Virtual',   number: '2',  startSec: 44400, endSec: 44700 },
-	{ title: 'Kate 包框 180s_早',              type: 'Virtual',   number: '3',  startSec: 44700, endSec: 44880 },
-	{ title: '[Next On] 椅子樂團',             type: 'Virtual',   number: '4',  startSec: 44880, endSec: 45000 },
-	{ title: '[PGM] 椅子樂團',                 type: 'Virtual',   number: '5',  startSec: 45000, endSec: 47400 },
-	{ title: '[List] List 1 (ML1)',            type: 'VideoList', number: '6',  startSec: 47400, endSec: 54000, items: TEST_LIST_ITEMS['[List] List 1 (ML1)'] },
-	{ title: '[Next On] 血肉果汁機 ft. 陳亞蘭', type: 'Virtual',   number: '19', startSec: 54000, endSec: 76200 },
-	{ title: '[PGM] 血肉果汁機 ft. 陳亞蘭',     type: 'Virtual',   number: '20', startSec: 76200, endSec: 78600 },
-	{ title: 'Day1 收播字卡',                   type: 'Virtual',   number: '21', startSec: 78600, endSec: 79200 },
+	{ title: '測試',                              type: 'Virtual',   number: '1',  startSec: 0,     endSec: 41400 },
+	{ title: '開播前字卡',                         type: 'Virtual',   number: '2',  startSec: 44400, endSec: 44700 },
+	{ title: 'Kate 包框 180s_早',                 type: 'Virtual',   number: '3',  startSec: 44700, endSec: 44880 },
+	{ title: '[Next On] 椅子樂團',                type: 'Virtual',   number: '4',  startSec: 44880, endSec: 45000 },
+	{ title: '[PGM] 椅子樂團',                    type: 'Virtual',   number: '5',  startSec: 45000, endSec: 47400 },
+	{ title: '[List] List 1 (ML1)',               type: 'VideoList', number: '6',  startSec: 47400, endSec: 50850, items: TEST_LIST_ITEMS['[List] List 1 (ML1)'] },
+	{ title: '[Next On] The Birthday (JP)',        type: 'Virtual',   number: '7',  startSec: 50850, endSec: 51000 },
+	{ title: '[PGM] The Birthday (JP)',           type: 'Virtual',   number: '8',  startSec: 51000, endSec: 53400 },
+	{ title: '[List] List 2 (ML2)',               type: 'VideoList', number: '9',  startSec: 53400, endSec: 56850, items: TEST_LIST_ITEMS['[List] List 2 (ML2)'] },
+	{ title: '[Next On] Aooo (JP)',               type: 'Virtual',   number: '10', startSec: 56850, endSec: 57000 },
+	{ title: '[PGM] Aooo (JP)',                   type: 'Virtual',   number: '11', startSec: 57000, endSec: 59400 },
+	{ title: '[List] List 3 (ML3)',               type: 'VideoList', number: '12', startSec: 59400, endSec: 62850, items: TEST_LIST_ITEMS['[List] List 3 (ML3)'] },
+	{ title: '[Next On] 滅火器',                  type: 'Virtual',   number: '13', startSec: 62850, endSec: 63000 },
+	{ title: '[PGM] 滅火器',                      type: 'Virtual',   number: '14', startSec: 63000, endSec: 65400 },
+	{ title: '[List] List 4 (ML4)',               type: 'VideoList', number: '15', startSec: 65400, endSec: 68850, items: TEST_LIST_ITEMS['[List] List 4 (ML4)'] },
+	{ title: '[Next On] milet (JP)',              type: 'Virtual',   number: '16', startSec: 68850, endSec: 69000 },
+	{ title: '[PGM] milet (JP)',                  type: 'Virtual',   number: '17', startSec: 69000, endSec: 71400 },
+	{ title: '[List] List 5 (ML5)',               type: 'VideoList', number: '18', startSec: 71400, endSec: 75930, items: TEST_LIST_ITEMS['[List] List 5 (ML5)'] },
+	{ title: '[Next On] 血肉果汁機 ft. 陳亞蘭',    type: 'Virtual',   number: '19', startSec: 75930, endSec: 76200 },
+	{ title: '[PGM] 血肉果汁機 ft. 陳亞蘭',        type: 'Virtual',   number: '20', startSec: 76200, endSec: 78600 },
+	{ title: 'Day1 收播字卡',                      type: 'Virtual',   number: '21', startSec: 78600, endSec: 79200 },
 ]
 
 /**

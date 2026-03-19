@@ -236,7 +236,7 @@ function getDuration(startStr, endStr) {
 	const totalSeconds = Math.round((end - start) / 1000)
 	const minutes = Math.floor(totalSeconds / 60)
 	const seconds = totalSeconds % 60
-	return `${minutes} 分 ${seconds} 秒`
+	return `<span class="font-mono tabular-nums">${minutes}</span> 分 <span class="font-mono tabular-nums">${seconds}</span> 秒`
 }
 
 function parseCSV(text) {
@@ -666,6 +666,17 @@ function getTimeUntilStart(row) {
 	return `${minutes}:${seconds}`
 }
 
+// 進行中的流程，回傳 0~100 的進度百分比；否則回傳 0
+function getRowProgress(row) {
+	if (getRowTimeStatus(row) !== 'current') return 0
+	const startSec = timeStrToSeconds(row['開始時間'])
+	const endSec = timeStrToSeconds(row['結束時間'])
+	if (startSec == null || endSec == null || endSec <= startSec) return 0
+	const elapsed = nowTimeSeconds.value - startSec
+	const total = endSec - startSec
+	return Math.min(100, Math.max(0, (elapsed / total) * 100))
+}
+
 // 進行中的流程，回傳「已開始 x 分 x 秒」；否則回傳 null。一律只看時間（當作今天），不跨日。
 function getTimeElapsedSinceStart(row) {
 	if (getRowTimeStatus(row) !== 'current') return null
@@ -711,13 +722,13 @@ const currentRowIndex = computed(() => {
 			<span class="flex items-center gap-1"
 				:title="`MAIN：WS ${wsMainConnected ? '已連線' : '未連線'}，vMix ${vmixMainApiConnected ? '已連線' : '未連線'}`">
 				<span class="w-2 h-2 rounded-full shrink-0"
-					:class="vmixMainApiConnected ? 'bg-sky-400 animate-pulse' : 'bg-stone-500'"></span>
+					:class="vmixMainApiConnected ? 'bg-emerald-500 animate-pulse' : 'bg-stone-500'"></span>
 				<span>MAIN</span>
 			</span>
 			<span class="flex items-center gap-1"
 				:title="`SPARE：WS ${wsSpareConnected ? '已連線' : '未連線'}，vMix ${vmixSpareApiConnected ? '已連線' : '未連線'}`">
 				<span class="w-2 h-2 rounded-full shrink-0"
-					:class="vmixSpareApiConnected ? 'bg-amber-400 animate-pulse' : 'bg-stone-500'"></span>
+					:class="vmixSpareApiConnected ? 'bg-emerald-500 animate-pulse' : 'bg-stone-500'"></span>
 				<span>SPARE</span>
 			</span>
 			<span class="flex items-center gap-1"
@@ -746,10 +757,7 @@ const currentRowIndex = computed(() => {
 						<!-- MAIN -->
 						<div>
 							<div class="flex items-center gap-1.5 mb-1">
-								<span class="w-1.5 h-1.5 rounded-full shrink-0"
-									:class="vmixMainApiConnected ? 'bg-sky-400 animate-pulse' : 'bg-stone-500'"></span>
-								<span class="text-xs font-bold"
-									:class="isDark ? 'text-sky-400' : 'text-sky-600'">MAIN</span>
+								<span class="text-xs font-bold">MAIN</span>
 							</div>
 							<div class="flex gap-1.5">
 								<input v-model="vmixHostMain" type="text" placeholder="localhost"
@@ -766,10 +774,7 @@ const currentRowIndex = computed(() => {
 						<!-- SPARE -->
 						<div>
 							<div class="flex items-center gap-1.5 mb-1">
-								<span class="w-1.5 h-1.5 rounded-full shrink-0"
-									:class="vmixSpareApiConnected ? 'bg-amber-400 animate-pulse' : 'bg-stone-500'"></span>
-								<span class="text-xs font-bold"
-									:class="isDark ? 'text-amber-400' : 'text-amber-600'">SPARE</span>
+								<span class="text-xs font-bold">SPARE</span>
 							</div>
 							<div class="flex gap-1.5">
 								<input v-model="vmixHostSpare" type="text" placeholder="localhost"
@@ -835,7 +840,8 @@ const currentRowIndex = computed(() => {
 					</div>
 					<div class="font-mono text-4xl tracking-wider tabular-nums"
 						:class="isDark ? 'text-stone-200' : 'text-stone-800'">
-						{{ String(Math.floor(Math.abs(pgmListScheduleDiff) / 60)).padStart(2, '0') }}:{{ String(Math.abs(pgmListScheduleDiff) % 60).padStart(2, '0') }}
+						{{ String(Math.floor(Math.abs(pgmListScheduleDiff) / 60)).padStart(2, '0') }}:{{
+							String(Math.abs(pgmListScheduleDiff) % 60).padStart(2, '0') }}
 					</div>
 				</template>
 				<template v-else>
@@ -914,16 +920,22 @@ const currentRowIndex = computed(() => {
 									:class="isDark ? 'text-stone-300' : 'text-stone-700'">
 									<span class="font-mono">{{ formatTime(row['開始時間']) }} ~ {{ formatTime(row['結束時間'])
 									}}</span>・
-									{{ getDuration(row['開始時間'], row['結束時間']) }}
+									<span v-html="getDuration(row['開始時間'], row['結束時間'])"></span>
 
 									<br>
 									<template v-if="getRowTimeStatus(row) === 'current' && getTimeLeftUntilEnd(row)">
-										<span class="font-mono font-medium "
+										<div class="mt-2.5 h-2.5 rounded-full overflow-hidden"
+											:class="isDark ? 'bg-stone-700' : 'bg-stone-300'">
+											<div class="h-full rounded-full transition-all duration-1000 bg-sky-500"
+												:style="{ width: getRowProgress(row) + '%' }"></div>
+										</div>
+										<div class="flex items-center justify-between font-mono font-medium"
 											:class="isDark ? 'text-stone-200' : 'text-stone-500'">
-											{{ getTimeElapsedSinceStart(row) ? `已進行 ${getTimeElapsedSinceStart(row)} / `
-												: '' }}
-											{{ getTimeLeftUntilEnd(row) }} 後結束
-										</span>
+											<span v-if="getTimeElapsedSinceStart(row)">{{ getTimeElapsedSinceStart(row)
+												}}</span>
+											<span v-else></span>
+											<span>-{{ getTimeLeftUntilEnd(row) }}</span>
+										</div>
 									</template>
 								</td>
 								<td class="py-2.5 px-2 align-middle text-center text-sm"
@@ -952,21 +964,21 @@ const currentRowIndex = computed(() => {
 											<!-- 狀態標籤：MAIN PGM / MAIN PVW / SPARE PGM / SPARE PVW -->
 											<div class="flex flex-row flex-wrap items-center justify-center gap-2 mt-1">
 												<span v-if="pgmName && vmixSceneMap[getRowKey(row)] === pgmName"
-													class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white">
+													class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-red-600 text-white">
 													MAIN PGM
 												</span>
 												<span v-if="pvwName && vmixSceneMap[getRowKey(row)] === pvwName"
-													class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold bg-green-600 text-white">
+													class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-green-600 text-white">
 													MAIN PVW
 												</span>
 												<span
 													v-if="pgmNameSpare && vmixSceneMap[getRowKey(row)] === pgmNameSpare"
-													class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold bg-red-100 text-red-600">
+													class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-red-100 text-red-600">
 													SPARE PGM
 												</span>
 												<span
 													v-if="pvwNameSpare && vmixSceneMap[getRowKey(row)] === pvwNameSpare"
-													class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold bg-green-100 text-green-600">
+													class="inline-flex items-center rounded px-1.5 py-0.5 text-[13px] font-bold bg-green-100 text-green-600">
 													SPARE PVW
 												</span>
 											</div>
@@ -997,12 +1009,12 @@ const currentRowIndex = computed(() => {
 														MAIN<br>
 														<template v-if="summary">
 															<span :class="isDark ? 'text-stone-300' : 'text-stone-700'">
-																已播 <span class="font-mono tabular-nums">{{
+																<span class="font-mono tabular-nums">{{
 																	summary.elapsed
-																	}}</span>
-																／ <span class="font-mono tabular-nums">{{
+																}}</span>
+																　-<span class="font-mono tabular-nums">{{
 																	summary.remaining
-																	}}</span> 後結束
+																}}</span>
 															</span>
 															<span v-if="pgmListScheduleDiff !== null"
 																class="block font-mono tabular-nums mt-0.5 font-bold"
@@ -1011,9 +1023,12 @@ const currentRowIndex = computed(() => {
 																	: pgmListScheduleDiff > 0
 																		? 'text-red-400'
 																		: 'text-sky-400'">
-																<template v-if="Math.abs(pgmListScheduleDiff) < 1">準時</template>
-																<template v-else-if="pgmListScheduleDiff > 0">延遲 {{ pgmListScheduleDiff }}s</template>
-																<template v-else>超前 {{ Math.abs(pgmListScheduleDiff) }}s</template>
+																<template
+																	v-if="Math.abs(pgmListScheduleDiff) < 1">準時</template>
+																<template v-else-if="pgmListScheduleDiff > 0">延遲 {{
+																	pgmListScheduleDiff }}s</template>
+																<template v-else>超前 {{ Math.abs(pgmListScheduleDiff)
+																	}}s</template>
 															</span>
 														</template>
 													</th>
@@ -1022,12 +1037,12 @@ const currentRowIndex = computed(() => {
 														SPARE<br>
 														<template v-if="summarySpare">
 															<span :class="isDark ? 'text-stone-300' : 'text-stone-700'">
-																已播 <span class="font-mono tabular-nums">{{
+																<span class="font-mono tabular-nums">{{
 																	summarySpare.elapsed
-																	}}</span>
-																／ <span class="font-mono tabular-nums">{{
+																}}</span>
+																　- <span class="font-mono tabular-nums">{{
 																	summarySpare.remaining
-																	}}</span> 後結束
+																}}</span>
 															</span>
 														</template>
 													</th>
@@ -1062,8 +1077,8 @@ const currentRowIndex = computed(() => {
 															<span v-if="j === currentIdx && cueProgress"
 																class="block font-mono tabular-nums text-[10px] leading-tight mt-0.5"
 																:class="isDark ? 'text-amber-400/70' : 'text-amber-700'">
-																已播 {{ cueProgress.elapsed }} / {{
-																	cueProgress.remaining }} 後結束
+																{{ cueProgress.elapsed }}　- {{
+																	cueProgress.remaining }}
 															</span>
 														</td>
 														<!-- SPARE 指示欄 -->
@@ -1073,8 +1088,8 @@ const currentRowIndex = computed(() => {
 															<span v-if="j === currentIdxSpare && cueProgressSpare"
 																class="block font-mono tabular-nums text-[10px] leading-tight mt-0.5"
 																:class="isDark ? 'text-amber-400/70' : 'text-amber-700'">
-																已播 {{ cueProgressSpare.elapsed }} / {{
-																	cueProgressSpare.remaining }} 後結束
+																{{ cueProgressSpare.elapsed }}　- {{
+																	cueProgressSpare.remaining }}
 															</span>
 														</td>
 													</tr>
