@@ -622,7 +622,8 @@ function getListCurrentCueProgressSpare(row) {
 }
 
 // 將秒數字串（如 "120s"、"180s_早"）轉為 MM:SS 格式（如 "02:00"、"03:00 早"），也可能沒有 s
-function formatListDuration(sec) {
+function formatListDuration(_sec) {
+	const sec = Math.floor(_sec)
 	// 計算分鐘與秒數
 	const minutes = Math.floor(sec / 60)
 	const seconds = sec % 60
