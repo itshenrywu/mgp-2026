@@ -131,17 +131,7 @@ function loadTestDataFromXml() {
 			if (input.type === 'VideoList') {
 				const listRaw = inp.list?.item
 				const listArr = Array.isArray(listRaw) ? listRaw : (listRaw ? [listRaw] : [])
-				input.items = listArr.map((item) => {
-					// XML 中 item 為純文字路徑；selected="true" 的 item 會被解析成物件
-					const isObj = typeof item === 'object' && item !== null
-					const path = isObj ? String(item['#text'] ?? '') : String(item)
-					const filename = path.split(/[\\/]/).pop() ?? ''
-					const name = filename.replace(/\.[^/.]+$/, '')
-					const selected = isObj
-						? String(item['@_selected'] ?? 'False').toLowerCase() === 'true'
-						: false
-					return { name, duration: getDuration(path), selected }
-				})
+				input.items = listArr.map((item) => parseVideoListItemEntry(item))
 			}
 			return input
 		})
@@ -196,6 +186,24 @@ function getDuration(item) {
 		if (path.includes(filename)) return duration
 	}
 	return 0
+}
+
+/**
+ * vMix VideoList &lt;list&gt;&lt;item&gt;：常見為「路徑在元素文字」；少數版本可能用 @_filename。
+ */
+function parseVideoListItemEntry(raw) {
+	const isObj = typeof raw === 'object' && raw !== null
+	const attrPath = isObj ? String(raw['@_filename'] ?? '').trim() : ''
+	const textPath = isObj ? String(raw['#text'] ?? '').trim() : String(raw ?? '').trim()
+	const path = attrPath || textPath
+	const stemAttr = isObj ? String(raw['@_filenamewithoutext'] ?? '').trim() : ''
+	const base = path ? (path.split(/[\\/]/).pop() ?? '') : stemAttr
+	const name = base.replace(/\.[^/.]+$/, '')
+	const selected = isObj
+		? String(raw['@_selected'] ?? 'False').toLowerCase() === 'true'
+		: false
+	const durationKey = path || stemAttr || base
+	return { name, duration: getDuration(durationKey), selected }
 }
 
 async function startTestMode(inst) {
@@ -318,15 +326,7 @@ async function fetchVmixState(inst) {
 			if (input.type === 'VideoList') {
 				const listRaw = inp.list?.item
 				const listArr = Array.isArray(listRaw) ? listRaw : (listRaw ? [listRaw] : [])
-				input.items = listArr.map((item) => {
-					const filename = String(item['@_filename'] ?? item['@_filenamewithoutext'] ?? '')
-					const name = filename ? filename.split(/[\\/]/).pop().replace(/\.[^/.]+$/, '') : ''
-					return {
-						name,
-						duration: getDuration(filename),
-						selected: String(item['@_selected'] ?? 'False').toLowerCase() === 'true',
-					}
-				})
+				input.items = listArr.map((item) => parseVideoListItemEntry(item))
 			}
 			return input
 		})
