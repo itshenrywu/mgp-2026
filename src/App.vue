@@ -459,6 +459,33 @@ const pgmListScheduleDiff = computed(() => {
 	return Math.round(estimatedEndSec - endSec)
 })
 
+// vMix MAIN PGM（非 List）對應表定時間的延遲計算
+// 正值 = 延遲（表定已結束但 vMix 仍在播放）；負值 = 超前；0 = 時間在表定範圍內
+const vmixNonListScheduleDiff = computed(() => {
+	if (!pgmName.value || pgmSceneType.value === 'list') return null
+	const row = rows.value.find(r => vmixSceneMap.value[getRowKey(r)] === pgmName.value)
+	if (!row) return null
+	const nowSec = nowTimeSeconds.value
+	const startSec = timeStrToSeconds(row['開始時間'])
+	const endSec = timeStrToSeconds(row['結束時間'])
+	if (startSec == null || endSec == null) return null
+	if (nowSec >= startSec && nowSec < endSec) return 0
+	if (nowSec >= endSec) return nowSec - endSec
+	return nowSec - startSec
+})
+
+// 整合 List 與非 List 的表定延遲（List 優先，精度更高）
+const activeScheduleDiff = computed(() => {
+	if (pgmListScheduleDiff.value !== null) return pgmListScheduleDiff.value
+	return vmixNonListScheduleDiff.value
+})
+
+// 目前 vMix MAIN PGM 對應的表定列（供 UI 顯示參考）
+const vmixPgmRow = computed(() => {
+	if (!pgmName.value) return null
+	return rows.value.find(r => vmixSceneMap.value[getRowKey(r)] === pgmName.value) ?? null
+})
+
 // 依 elapsed 計算目前播到第幾個 cue（0-based index），找不到回傳 -1
 function getListCurrentCueIdx(row) {
 	if (!isPgmListRow(row)) return -1
@@ -833,25 +860,21 @@ const currentRowIndex = computed(() => {
 				</div>
 			</div>
 			<div class="text-center">
-				<template v-if="pgmListScheduleDiff !== null">
+				<template v-if="activeScheduleDiff !== null">
 					<div class="text-sm mb-1 font-semibold"
-						:class="Math.abs(pgmListScheduleDiff) < 1 ? 'text-emerald-600' : pgmListScheduleDiff > 0 ? 'text-red-500' : 'text-sky-500'">
-						<template v-if="Math.abs(pgmListScheduleDiff) < 1">準時</template>
-						<template v-else-if="pgmListScheduleDiff > 0">延遲</template>
+						:class="Math.abs(activeScheduleDiff) < 1 ? 'text-emerald-600' : activeScheduleDiff > 0 ? 'text-red-500' : 'text-sky-500'">
+						<template v-if="Math.abs(activeScheduleDiff) < 1">準時</template>
+						<template v-else-if="activeScheduleDiff > 0">延遲</template>
 						<template v-else>超前</template>
 					</div>
 					<div class="font-mono text-4xl tracking-wider tabular-nums"
 						:class="isDark ? 'text-stone-200' : 'text-stone-800'">
-						{{ String(Math.floor(Math.abs(pgmListScheduleDiff) / 60)).padStart(2, '0') }}:{{
-							String(Math.abs(pgmListScheduleDiff) % 60).padStart(2, '0') }}
+						{{ String(Math.floor(Math.abs(activeScheduleDiff) / 60)).padStart(2, '0') }}:{{
+							String(Math.floor(Math.abs(activeScheduleDiff)) % 60).padStart(2, '0') }}
 					</div>
 				</template>
 				<template v-else>
-					<div class="text-sm mb-1" :class="isDark ? 'text-stone-400' : 'text-stone-500'">　</div>
-					<div class="font-mono text-4xl tracking-wider tabular-nums"
-						:class="isDark ? 'text-stone-600' : 'text-stone-400'">
-						--:--
-					</div>
+
 				</template>
 			</div>
 		</div>
