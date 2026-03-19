@@ -1,10 +1,45 @@
-import { execFile } from 'child_process'
-import { promisify } from 'util'
-import { pathToFileURL } from 'url'
+import { createRequire } from 'node:module'
+import { open } from 'node:fs/promises'
+import { pathToFileURL } from 'node:url'
 import express from 'express'
 import cors from 'cors'
+import mediaInfoFactory from 'mediainfo.js'
 
-const execFileAsync = promisify(execFile)
+const require = createRequire(import.meta.url)
+const MEDIAINFO_WASM = require.resolve('mediainfo.js/MediaInfoModule.wasm')
+
+/** 單例：MediaInfo WASM 不應並行 analyzeData，以佇列序列化 */
+let mediaInfoInstancePromise = null
+let analyzeQueue = Promise.resolve()
+
+function enqueueAnalyze(task) {
+	const run = analyzeQueue.then(task)
+	analyzeQueue = run.catch(() => {})
+	return run
+}
+
+function getMediaInfoInstance() {
+	if (!mediaInfoInstancePromise) {
+		mediaInfoInstancePromise = mediaInfoFactory({
+			locateFile: (filename) =>
+				filename === 'MediaInfoModule.wasm' ? MEDIAINFO_WASM : filename,
+		})
+	}
+	return mediaInfoInstancePromise
+}
+
+function durationFromMediaInfoResult(result) {
+	const tracks = result?.media?.track
+	if (!Array.isArray(tracks) || tracks.length === 0) {
+		throw new Error('MediaInfo 無法解析媒體資訊')
+	}
+	const general = tracks.find((t) => t['@type'] === 'General')
+	const duration = general?.Duration
+	if (typeof duration !== 'number' || !Number.isFinite(duration) || duration <= 0) {
+		throw new Error('MediaInfo 無法取得有效長度')
+	}
+	return duration
+}
 
 const BASE_DIR = 'C:\\MGPT\\大港素材整理'
 
@@ -55,57 +90,34 @@ export function getMediaLoungePaths(day = '1', stage) {
 }
 
 export async function probeDurationSeconds(filePath) {
-	const escapedPath = String(filePath).replace(/'/g, "''")
-	const command = [
-		"$ErrorActionPreference = 'Stop'",
-		"$shell = New-Object -ComObject Shell.Application",
-		`$targetPath = '${escapedPath}'`,
-		'$folderPath = [System.IO.Path]::GetDirectoryName($targetPath)',
-		'$fileName = [System.IO.Path]::GetFileName($targetPath)',
-		'if ([string]::IsNullOrWhiteSpace($folderPath) -or [string]::IsNullOrWhiteSpace($fileName)) { throw "無效檔案路徑" }',
-		'$folder = $shell.Namespace($folderPath)',
-		'if ($null -eq $folder) { throw "找不到資料夾" }',
-		'$file = $folder.ParseName($fileName)',
-		'if ($null -eq $file) { throw "找不到檔案" }',
-		'$duration = $folder.GetDetailsOf($file, 27)',
-		'Write-Output $duration',
-	].join('; ')
-
-	const { stdout } = await execFileAsync('powershell', [
-		'-NoProfile',
-		'-NonInteractive',
-		'-ExecutionPolicy',
-		'Bypass',
-		'-Command',
-		command,
-	])
-
-	const durationText = String(stdout).trim()
-	const normalized = durationText.replace(/[^\d:.,]/g, '').replace(',', '.')
-	if (!normalized) {
-		throw new Error('PowerShell 回傳空白長度')
-	}
-
-	const durationParts = normalized.split(':').filter(Boolean).map((part) => Number.parseFloat(part))
-	if (durationParts.some((part) => !Number.isFinite(part))) {
-		throw new Error(`PowerShell 回傳無效長度格式: ${durationText}`)
-	}
-
-	let duration = 0
-	if (durationParts.length === 3) {
-		duration = durationParts[0] * 3600 + durationParts[1] * 60 + durationParts[2]
-	} else if (durationParts.length === 2) {
-		duration = durationParts[0] * 60 + durationParts[1]
-	} else if (durationParts.length === 1) {
-		duration = durationParts[0]
-	} else {
-		throw new Error(`PowerShell 回傳無效長度格式: ${durationText}`)
-	}
-
-	if (!Number.isFinite(duration)) {
-		throw new Error(`PowerShell 回傳無效秒數: ${durationText}`)
-	}
-	return duration
+	return enqueueAnalyze(async () => {
+		const mediainfo = await getMediaInfoInstance()
+		let fh
+		try {
+			fh = await open(String(filePath), 'r')
+		} catch (err) {
+			const code = err && typeof err === 'object' && 'code' in err ? err.code : undefined
+			if (code === 'ENOENT') {
+				throw new Error(`找不到檔案: ${filePath}`)
+			}
+			throw err instanceof Error ? err : new Error(String(err))
+		}
+		try {
+			const { size } = await fh.stat()
+			if (size <= 0) {
+				throw new Error('檔案為空或無效')
+			}
+			const readChunk = async (chunkSize, offset) => {
+				const buf = new Uint8Array(chunkSize)
+				const { bytesRead } = await fh.read(buf, 0, chunkSize, offset)
+				return bytesRead === buf.byteLength ? buf : buf.subarray(0, bytesRead)
+			}
+			const result = await mediainfo.analyzeData(size, readChunk)
+			return durationFromMediaInfoResult(result)
+		} finally {
+			await fh.close()
+		}
+	})
 }
 
 export async function getMediaLoungeDurations(day = '1', stage) {
