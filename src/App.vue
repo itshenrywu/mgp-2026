@@ -1059,7 +1059,7 @@ const currentRowIndex = computed(() => {
 											<thead>
 												<tr
 													:class="isDark ? 'bg-stone-700/60 text-stone-300 border-b border-stone-600/50' : 'bg-stone-300/80 text-stone-700 border-b border-stone-400/60'">
-													<th class="text-left px-3 py-1 font-semibold">Cue</th>
+													<th class="text-left px-3 py-1 font-semibold">Item</th>
 													<th class="text-right px-3 py-1 font-semibold w-20">長度</th>
 													<th
 														class="text-center px-2 py-1 font-semibold w-[12rem] text-[10px]">
