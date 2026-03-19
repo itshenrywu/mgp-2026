@@ -206,6 +206,26 @@ function parseVideoListItemEntry(raw) {
 	return { name, duration: getDuration(durationKey), selected }
 }
 
+/**
+ * vMix VideoList 的 position 是「當前播放 item 的位置」，
+ * 這裡轉成整條 list 的累積已播秒數（前面 item 總和 + 當前 item position）。
+ */
+function getVideoListElapsedSeconds(input) {
+	if (!input || !Array.isArray(input.items)) return Number(input?.position ?? 0) / 1000
+	const items = input.items
+	const selectedIdx = items.findIndex((item) => item?.selected)
+	if (selectedIdx < 0) return Number(input?.position ?? 0) / 1000
+
+	let elapsedBefore = 0
+	for (let i = 0; i < selectedIdx; i++) {
+		const d = Number(items[i]?.duration ?? 0)
+		if (Number.isFinite(d) && d > 0) elapsedBefore += d
+	}
+
+	const currentItemPos = Number(input.position ?? 0) / 1000
+	return elapsedBefore + (Number.isFinite(currentItemPos) && currentItemPos > 0 ? currentItemPos : 0)
+}
+
 async function startTestMode(inst) {
 	if (inst.pollTimer) clearInterval(inst.pollTimer)
 
@@ -357,7 +377,7 @@ async function fetchVmixState(inst) {
 		const pvwTitle = pvwInput?.title ?? ''
 		const titleChanged = pgmTitle !== inst.lastPgmTitle
 		const isListPgm = !!(pgmInput && pgmInput.type.toLowerCase().includes('list'))
-		const currentStarted = isListPgm ? (pgmInput.position / 1000) : null
+		const currentStarted = isListPgm ? getVideoListElapsedSeconds(pgmInput) : null
 		const lastStarted = (inst.lastPgmPayload && typeof inst.lastPgmPayload.started === 'number')
 			? inst.lastPgmPayload.started
 			: null
