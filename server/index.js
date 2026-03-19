@@ -163,7 +163,7 @@ function getDuration(item) {
 	const durationMapping = [
 		// 廣告
 		['2026_MegaportCF_30s', 30],
-		['尾一_Alcon', 30],
+		['尾一_Alcon', 20],
 
 		// 中插
 		['中插 1 to 4', 120],
