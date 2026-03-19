@@ -15,6 +15,8 @@ export default defineConfig({
 			'/test':      'http://localhost:3333',
 			'/broadcast': 'http://localhost:3333',
 			'/status':    'http://localhost:3333',
+			'/vmix-host': 'http://localhost:3333',
+			'/vmix-inputs': 'http://localhost:3333',
 		},
 	},
 })
