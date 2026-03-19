@@ -26,12 +26,80 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const PORT = process.env.PORT || 3333
 const DIST_DIR = join(__dirname, '../dist')
 const VMIX_API_PORT = Number(process.env.VMIX_PORT) || 8088
+const ML_API_PORT = Number(process.env.ML_PORT) || 3334
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
 const xmlParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
+let mlDurationCache = []
+
+function normalizePathForMatch(path) {
+	return String(path ?? '').replaceAll('\\', '/').toLowerCase()
+}
+
+function buildMlDurationCacheItems(payload) {
+	const results = payload?.results
+	if (!results || typeof results !== 'object') return []
+
+	return Object.values(results).flatMap((entry) => {
+		if (!entry || !Number.isFinite(entry.durationSeconds)) entry.durationSeconds = 5940 // no data
+		const filePath = String(entry.filePath ?? '')
+		const normalizedPath = normalizePathForMatch(filePath)
+		const filename = filePath.split(/[\\/]/).pop() ?? ''
+		const fileStem = filename.replace(/\.[^/.]+$/, '').toLowerCase()
+
+		const patterns = []
+		if (normalizedPath) patterns.push(normalizedPath)
+		if (fileStem) patterns.push(fileStem)
+
+		if (patterns.length === 0) return []
+
+		return [{
+			patterns,
+			duration: Number(entry.durationSeconds),
+		}]
+	})
+}
+
+async function refreshMlDurations(mainHost) {
+	const targets = [
+		{ day: '1', stage: '1' },
+		{ day: '1', stage: '2' },
+		{ day: '2', stage: '1' },
+		{ day: '2', stage: '2' },
+	]
+	const requests = targets.map(async ({ day, stage }) => {
+		const url = `http://${mainHost}:${ML_API_PORT}/media-lounge/durations?day=${day}&stage=${stage}`
+		const res = await fetch(url, { signal: AbortSignal.timeout(900) })
+		if (!res.ok) throw new Error(`HTTP ${res.status} day=${day} stage=${stage}`)
+		const data = await res.json()
+		if (!data?.ok) throw new Error(`API ok=false day=${day} stage=${stage}`)
+		return data
+	})
+
+	const settled = await Promise.allSettled(requests)
+	const nextCache = settled
+		.filter((item) => item.status === 'fulfilled')
+		.flatMap((item) => buildMlDurationCacheItems(item.value))
+
+	// console.log('item.value', item.value)
+
+	if (nextCache.length > 0) {
+		mlDurationCache = nextCache
+	}
+}
+
+function startMlDurationPolling(mainHost) {
+	const host = String(mainHost ?? '').trim()
+	if (!host) return
+
+	refreshMlDurations(host).catch(() => {})
+	setInterval(() => {
+		refreshMlDurations(host).catch(() => {})
+	}, 1000)
+}
 
 // ── Test Mode ──────────────────────────────────────────────────────────────
 
@@ -88,7 +156,20 @@ function loadTestDataFromXml() {
 }
 
 function getDuration(item) {
-	console.log('=' , item)
+	const isObj = typeof item === 'object' && item !== null
+	const path = isObj ? String(item['#text'] ?? '') : String(item)
+	const normalizedPath = normalizePathForMatch(path)
+
+	// console.log('mlDurationCache', mlDurationCache)
+
+	if (normalizedPath.includes('ml')) {
+		for (const item of mlDurationCache) {
+			if (item.patterns.some((pattern) => normalizedPath.includes(pattern))) {
+				return item.duration
+			}
+		}
+	}
+
 	const durationMapping = [
 		// 廣告
 		['2026_MegaportCF_30s', 30],
@@ -112,15 +193,18 @@ function getDuration(item) {
 		['包框影片', 180]
 	]
 	for (const [filename, duration] of durationMapping) {
-		const isObj = typeof item === 'object' && item !== null
-		const path = isObj ? String(item['#text'] ?? '') : String(item)
 		if (path.includes(filename)) return duration
 	}
 	return 0
 }
 
-function startTestMode(inst) {
+async function startTestMode(inst) {
 	if (inst.pollTimer) clearInterval(inst.pollTimer)
+
+	// TEST_MODE 需要先嘗試拉一次 ML duration，避免第一次載入時 duration 都是 0。
+	try {
+		await refreshMlDurations(inst.host)
+	} catch {}
 
 	const testData = loadTestDataFromXml()
 	if (!testData) {
@@ -557,13 +641,9 @@ server.listen(PORT, () => {
 	// 啟動 MAIN 與 SPARE 兩個固定 instance
 	const mainInst = getOrCreateInstance('main', process.env.VMIX_HOST_MAIN || process.env.VMIX_HOST || 'localhost')
 	const spareInst = getOrCreateInstance('spare', process.env.VMIX_HOST_SPARE || 'localhost')
+	startMlDurationPolling(mainInst.host)
 
 	if (TEST_MODE) {
-		console.log(`\n⚠️  TEST MODE 已啟用（依南霸天 2026-03-21 時間表模擬 PGM）`)
-		console.log(`   測試 API：  http://localhost:${PORT}/test/status`)
-		console.log(`   手動切換：  POST http://localhost:${PORT}/test/next/main`)
-		console.log(`              POST http://localhost:${PORT}/test/next/spare`)
-		console.log(`   手動設定：  POST http://localhost:${PORT}/test/set { vmixId, type, name }\n`)
 		startTestMode(mainInst)
 		startTestMode(spareInst)
 	} else {
