@@ -55,19 +55,55 @@ export function getMediaLoungePaths(day = '1', stage) {
 }
 
 export async function probeDurationSeconds(filePath) {
-	const { stdout } = await execFileAsync('ffprobe', [
-		'-v',
-		'error',
-		'-show_entries',
-		'format=duration',
-		'-of',
-		'default=noprint_wrappers=1:nokey=1',
-		filePath,
+	const escapedPath = String(filePath).replace(/'/g, "''")
+	const command = [
+		"$ErrorActionPreference = 'Stop'",
+		"$shell = New-Object -ComObject Shell.Application",
+		`$targetPath = '${escapedPath}'`,
+		'$folderPath = [System.IO.Path]::GetDirectoryName($targetPath)',
+		'$fileName = [System.IO.Path]::GetFileName($targetPath)',
+		'if ([string]::IsNullOrWhiteSpace($folderPath) -or [string]::IsNullOrWhiteSpace($fileName)) { throw "無效檔案路徑" }',
+		'$folder = $shell.Namespace($folderPath)',
+		'if ($null -eq $folder) { throw "找不到資料夾" }',
+		'$file = $folder.ParseName($fileName)',
+		'if ($null -eq $file) { throw "找不到檔案" }',
+		'$duration = $folder.GetDetailsOf($file, 27)',
+		'Write-Output $duration',
+	].join('; ')
+
+	const { stdout } = await execFileAsync('powershell', [
+		'-NoProfile',
+		'-NonInteractive',
+		'-ExecutionPolicy',
+		'Bypass',
+		'-Command',
+		command,
 	])
 
-	const duration = Number.parseFloat(String(stdout).trim())
+	const durationText = String(stdout).trim()
+	const normalized = durationText.replace(/[^\d:.,]/g, '').replace(',', '.')
+	if (!normalized) {
+		throw new Error('PowerShell 回傳空白長度')
+	}
+
+	const durationParts = normalized.split(':').filter(Boolean).map((part) => Number.parseFloat(part))
+	if (durationParts.some((part) => !Number.isFinite(part))) {
+		throw new Error(`PowerShell 回傳無效長度格式: ${durationText}`)
+	}
+
+	let duration = 0
+	if (durationParts.length === 3) {
+		duration = durationParts[0] * 3600 + durationParts[1] * 60 + durationParts[2]
+	} else if (durationParts.length === 2) {
+		duration = durationParts[0] * 60 + durationParts[1]
+	} else if (durationParts.length === 1) {
+		duration = durationParts[0]
+	} else {
+		throw new Error(`PowerShell 回傳無效長度格式: ${durationText}`)
+	}
+
 	if (!Number.isFinite(duration)) {
-		throw new Error('ffprobe 回傳無效 duration')
+		throw new Error(`PowerShell 回傳無效秒數: ${durationText}`)
 	}
 	return duration
 }
