@@ -355,17 +355,31 @@ async function fetchVmixState(inst) {
 
 		const pgmTitle = pgmInput?.title ?? ''
 		const pvwTitle = pvwInput?.title ?? ''
+		const titleChanged = pgmTitle !== inst.lastPgmTitle
+		const isListPgm = !!(pgmInput && pgmInput.type.toLowerCase().includes('list'))
+		const currentStarted = isListPgm ? (pgmInput.position / 1000) : null
+		const lastStarted = (inst.lastPgmPayload && typeof inst.lastPgmPayload.started === 'number')
+			? inst.lastPgmPayload.started
+			: null
+		const listDrift = (currentStarted != null && lastStarted != null)
+			? Math.abs(currentStarted - lastStarted)
+			: 0
+		const shouldSyncListProgress = isListPgm
+			&& pgmTitle === inst.lastPgmTitle
+			&& listDrift >= 1
 
-		if (pgmTitle !== inst.lastPgmTitle) {
+		if (titleChanged || shouldSyncListProgress) {
 			inst.lastPgmTitle = pgmTitle
 			const payload = { type: 'pgm', name: pgmTitle }
-			if (pgmInput && pgmInput.type.toLowerCase().includes('list')) {
+			if (isListPgm && currentStarted != null) {
 				payload.scene_type = 'list'
-				payload.started = pgmInput.position / 1000
+				payload.started = currentStarted
 			}
 			inst.lastPgmPayload = payload
 			broadcastToId(inst.id, payload)
-			console.log(`[vMix:${inst.id}] PGM → ${pgmTitle}`)
+			if (titleChanged) {
+				console.log(`[vMix:${inst.id}] PGM → ${pgmTitle}`)
+			}
 		}
 
 		if (pvwTitle !== inst.lastPvwTitle) {
