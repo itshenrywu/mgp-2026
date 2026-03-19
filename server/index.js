@@ -34,6 +34,7 @@ app.use(express.json())
 
 const xmlParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
 let mlDurationCache = []
+const mlDurationRefreshInFlightByHost = new Map()
 
 function normalizePathForMatch(path) {
 	return String(path ?? '').replaceAll('\\', '/').toLowerCase()
@@ -91,14 +92,27 @@ async function refreshMlDurations(mainHost) {
 	}
 }
 
+function requestMlDurationRefresh(mainHost) {
+	const host = String(mainHost ?? '').trim()
+	if (!host) return Promise.resolve()
+	if (mlDurationRefreshInFlightByHost.has(host)) {
+		return mlDurationRefreshInFlightByHost.get(host)
+	}
+	const task = refreshMlDurations(host)
+		.catch(() => {})
+		.finally(() => {
+			mlDurationRefreshInFlightByHost.delete(host)
+		})
+	mlDurationRefreshInFlightByHost.set(host, task)
+	return task
+}
+
 function startMlDurationPolling(mainHost) {
 	const host = String(mainHost ?? '').trim()
 	if (!host) return
 
-	refreshMlDurations(host).catch(() => {})
-	setInterval(() => {
-		refreshMlDurations(host).catch(() => {})
-	}, 1000)
+	// 改為 WS 觸發拉取，啟動時只先抓一次快取。
+	requestMlDurationRefresh(host)
 }
 
 // ── Test Mode ──────────────────────────────────────────────────────────────
@@ -475,6 +489,9 @@ app.post('/vmix-host/:id', (req, res) => {
 	} else {
 		startPolling(inst)
 	}
+	if (id === 'main') {
+		requestMlDurationRefresh(inst.host)
+	}
 	console.log(`[vMix:${id}] 主機更新為 ${inst.host}${TEST_MODE ? '（TEST MODE）' : ''}`)
 	res.json({ ok: true, id, host: inst.host, testMode: TEST_MODE })
 })
@@ -655,6 +672,13 @@ wss.on('connection', (ws, req) => {
 			return
 		}
 		if (!parsed.type) return
+		if (parsed.type === 'request-ml-duration-refresh') {
+			const mainInst = vmixInstances.get('main')
+			if (mainInst?.host) {
+				requestMlDurationRefresh(mainInst.host)
+			}
+			return
+		}
 		broadcastToId(vmixId, parsed)
 	})
 

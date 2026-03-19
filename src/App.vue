@@ -47,6 +47,25 @@ let wsMain = null
 let wsSpare = null
 let wsMainReconnectTimer = null
 let wsSpareReconnectTimer = null
+let mlDurationRefreshQueued = false
+
+function requestMlDurationRefresh() {
+	if (mlDurationRefreshQueued) return
+	mlDurationRefreshQueued = true
+	setTimeout(() => {
+		mlDurationRefreshQueued = false
+		const message = JSON.stringify({ type: 'request-ml-duration-refresh' })
+		try {
+			if (wsMain && wsMain.readyState === WebSocket.OPEN) {
+				wsMain.send(message)
+				return
+			}
+			if (wsSpare && wsSpare.readyState === WebSocket.OPEN) {
+				wsSpare.send(message)
+			}
+		} catch (_) { }
+	}, 0)
+}
 
 function handleWsMessage(id, e) {
 	let msg
@@ -265,6 +284,7 @@ function toggleTheme() {
 	try {
 		localStorage.setItem('rundown-theme', isDark.value ? 'dark' : 'light')
 	} catch (_) { }
+	requestMlDurationRefresh()
 }
 
 // 目前時間（用於判斷進行中列，每秒更新）
@@ -390,6 +410,7 @@ function saveStageDate() {
 		localStorage.setItem('rundown-stage', selectedStage.value)
 		localStorage.setItem('rundown-date', selectedDate.value)
 	} catch (_) { }
+	requestMlDurationRefresh()
 }
 watch(selectedStage, saveStageDate)
 watch(selectedDate, saveStageDate)
@@ -414,6 +435,7 @@ function saveVmixSceneMap() {
 	try {
 		localStorage.setItem('rundown-vmix-scene-map', JSON.stringify(vmixSceneMap.value))
 	} catch (_) { }
+	requestMlDurationRefresh()
 }
 
 // 儲存指定 id（'main' | 'spare'）的 vMix 主機設定到伺服器
@@ -427,6 +449,7 @@ async function saveVmixHost(id) {
 			body: JSON.stringify({ host }),
 		})
 		try { localStorage.setItem(`rundown-vmix-host-${id}`, host) } catch (_) { }
+		requestMlDurationRefresh()
 	} catch (_) { }
 }
 
